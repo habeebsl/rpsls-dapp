@@ -11,6 +11,7 @@ interface GameResult {
     stake: string;
     contractAddress: string;
     status: 'pending' | 'completed' | 'timeout';
+    salt: string; // Required for reveal phase
     type?: 'win' | 'loss' | 'tie'; // Only set when game is completed
     opponent?: string;
     playerChoice?: string;
@@ -20,28 +21,6 @@ interface GameResult {
 async function ensureConnection() {
     if (!client.isOpen) {
         await client.connect();
-    }
-}
-
-export async function setUserAddress(userId: string, address: string) {
-    try {
-        await ensureConnection();
-        const key = `${userPrefixKey}${userId}`;
-        await client.set(key, address);
-    } catch (error) {
-        console.error("Error setting user address:", error);
-        throw error;
-    }
-}
-
-export async function getUserAddress(userId: string) {
-    try {
-        await ensureConnection();
-        const key = `${userPrefixKey}${userId}`;
-        return await client.get(key);
-    } catch (error) {
-        console.error("Error getting user address:", error);
-        return null;
     }
 }
 
