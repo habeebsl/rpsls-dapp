@@ -6,6 +6,7 @@ import { useNotificationStore } from '@/stores/notificationStore';
 import { useWalletStore } from '@/stores/walletStore';
 import { PrimaryButton } from '@/app/components/PrimaryButton';
 import { LoadingScreen } from '@/app/components/LoadingScreen';
+import { GameCreationModal } from '@/app/components/GameCreationModal';
 
 export default function Home() {
   const { addNotification } = useNotificationStore();
@@ -16,6 +17,7 @@ export default function Home() {
   const [displayWins, setDisplayWins] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isLoadingWins, setIsLoadingWins] = useState(false);
+  const [isGameModalOpen, setIsGameModalOpen] = useState(false);
 
   // Fetch user wins from API
   const fetchUserWins = async () => {
@@ -200,7 +202,7 @@ export default function Home() {
                 hoverBackgroundColor="hover:bg-green-600"
                 shadowColor="bg-green-700"
                 className="text-xl font-bold"
-                onClick={() => console.log("Challenge someone clicked!")}
+                onClick={() => setIsGameModalOpen(true)}
               />
             )}
           </div>
@@ -227,6 +229,12 @@ export default function Home() {
           </div> */}
         </div>
       </main>
+
+      {/* Game Creation Modal */}
+      <GameCreationModal 
+        isOpen={isGameModalOpen} 
+        onClose={() => setIsGameModalOpen(false)} 
+      />
     </div>
   );
 }

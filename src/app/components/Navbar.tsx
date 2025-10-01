@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import LoggedInContainer from './LoggedInContainer';
@@ -9,10 +9,12 @@ import { useWalletStore } from '@/stores/walletStore';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGamepad } from '@fortawesome/free-solid-svg-icons';
 import { PrimaryButton } from './PrimaryButton';
+import { GameCreationModal } from './GameCreationModal';
 
 export function NavBar() {
   const { isConnected, address, connect, checkConnection } = useWalletStore();
   const pathname = usePathname();
+  const [isGameModalOpen, setIsGameModalOpen] = useState(false);
 
   // Check wallet connection on component mount only
   useEffect(() => {
@@ -55,7 +57,7 @@ export function NavBar() {
           </Link>
           <PrimaryButton 
             text="Play a Game"
-            onClick={() => console.log("Play button clicked!")}
+            onClick={() => setIsGameModalOpen(true)}
           />
         </div>
         <div className="flex items-center gap-4">
@@ -67,6 +69,12 @@ export function NavBar() {
           />
         </div>
       </nav>
+
+      {/* Game Creation Modal */}
+      <GameCreationModal 
+        isOpen={isGameModalOpen} 
+        onClose={() => setIsGameModalOpen(false)} 
+      />
     </div>
   );
 }
