@@ -7,16 +7,20 @@ import { useWalletStore } from '@/stores/walletStore';
 import { PrimaryButton } from '@/app/components/PrimaryButton';
 import { LoadingScreen } from '@/app/components/LoadingScreen';
 import { GameCreationModal } from '@/app/components/GameCreationModal';
+import { useNotificationPolling } from '@/hooks/useNotificationPolling';
 
 export default function Home() {
   const { addNotification } = useNotificationStore();
   const { isConnected, address, connect, isLoading } = useWalletStore();
   
+  // Initialize notification polling
+  useNotificationPolling();
+  
   // Real wins data from Redis
   const [userWins, setUserWins] = useState(0);
   const [displayWins, setDisplayWins] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [isLoadingWins, setIsLoadingWins] = useState(false);
+  const [isLoadingWins, setIsLoadingWins] = useState(true); // Start as true to prevent flash
   const [isGameModalOpen, setIsGameModalOpen] = useState(false);
 
   // Fetch user wins from API
@@ -48,10 +52,13 @@ export default function Home() {
   useEffect(() => {
     if (isConnected && address) {
       fetchUserWins();
-    } else {
+    } else if (isConnected === false) {
+      // User is not connected, stop loading
       setUserWins(0);
       setDisplayWins(0);
+      setIsLoadingWins(false);
     }
+    // Keep loading when isConnected is null (still checking connection)
   }, [isConnected, address]);
 
   // Counting animation effect

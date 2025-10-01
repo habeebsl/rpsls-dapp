@@ -3,10 +3,11 @@
 import { useState, ReactNode } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
+import LoadingSpinner from './LoadingSpinner';
 
 interface PrimaryButtonProps {
   text?: string;
-  onClick?: () => void;
+  onClick?: () => void | Promise<void>;
   width?: number;
   height?: number;
   backgroundColor?: string;
@@ -19,6 +20,7 @@ interface PrimaryButtonProps {
   iconPosition?: 'left' | 'right';
   iconSize?: 'xs' | 'sm' | 'lg' | 'xl' | '2xl' | '1x' | '2x' | '3x' | '4x' | '5x' | '6x' | '7x' | '8x' | '9x' | '10x';
   shadowTop?: number;
+  loadingText?: string;
 }
 
 export function PrimaryButton({
@@ -35,23 +37,36 @@ export function PrimaryButton({
   icon,
   iconPosition = "left",
   iconSize = "sm",
-  shadowTop = 3
+  shadowTop = 3,
+  loadingText
 }: PrimaryButtonProps) {
   const [isPressed, setIsPressed] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleMouseDown = () => {
+    if (isLoading) return;
     setIsPressed(true);
   };
 
-  const handleMouseUp = () => {
+  const handleMouseUp = async () => {
+    if (isLoading) return;
     setIsPressed(false);
+    
     // Call the callback after releasing the click
     if (onClick) {
-      onClick();
+      try {
+        setIsLoading(true);
+        await onClick();
+      } catch (error) {
+        console.error('Button callback error:', error);
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
   const handleMouseLeave = () => {
+    if (isLoading) return;
     // Reset pressed state if mouse leaves while pressed
     setIsPressed(false);
   };
@@ -70,7 +85,7 @@ export function PrimaryButton({
         ></div>
       )}
       <button 
-        className={`relative z-10 px-3 py-2 ${borderRadius} transition-colors ${textColor} font-medium ${backgroundColor} ${hoverBackgroundColor} flex items-center justify-center gap-2`}
+        className={`relative z-10 px-3 py-2 ${borderRadius} transition-colors ${textColor} font-medium ${isLoading ? 'bg-gray-400 cursor-not-allowed' : `${backgroundColor} ${hoverBackgroundColor}`} flex items-center justify-center gap-2`}
         style={{ 
           width: `${width}px`,
           height: `${height}px`
@@ -78,13 +93,23 @@ export function PrimaryButton({
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseLeave}
+        disabled={isLoading}
       >
-        {icon && iconPosition === 'left' && (
-          <FontAwesomeIcon icon={icon} size={iconSize} />
-        )}
-        {text}
-        {icon && iconPosition === 'right' && (
-          <FontAwesomeIcon icon={icon} size={iconSize} />
+        {isLoading ? (
+          <>
+            <LoadingSpinner size="sm" />
+            <span>{loadingText || 'Loading...'}</span>
+          </>
+        ) : (
+          <>
+            {icon && iconPosition === 'left' && (
+              <FontAwesomeIcon icon={icon} size={iconSize} />
+            )}
+            {text}
+            {icon && iconPosition === 'right' && (
+              <FontAwesomeIcon icon={icon} size={iconSize} />
+            )}
+          </>
         )}
       </button>
     </div>
