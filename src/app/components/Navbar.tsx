@@ -28,34 +28,32 @@ export function NavBar() {
           <FontAwesomeIcon
             icon={faGamepad}
             className="text-blue-600"
-            size={"2xl"}
+            size={'2xl'}
           />
-          <div className="font-medium text-lg text-blue-600">
-            RPSLS
-          </div>
+          <div className="font-medium text-lg text-blue-600">RPSLS</div>
         </div>
         <div className="flex gap-4">
-          <Link 
-            href="/" 
+          <Link
+            href="/"
             className={`px-3 py-2 rounded-md transition-colors ${
-              pathname === '/' 
-                ? 'bg-blue-100 text-blue-700 font-medium' 
+              pathname === '/'
+                ? 'bg-blue-100 text-blue-700 font-medium'
                 : 'text-gray-700 hover:bg-gray-100 hover:text-blue-600'
             }`}
           >
             Dashboard
           </Link>
-          <Link 
-            href="/games" 
+          <Link
+            href="/games"
             className={`px-3 py-2 rounded-md transition-colors ${
-              pathname === '/games' 
-                ? 'bg-blue-100 text-blue-700 font-medium' 
+              pathname === '/games'
+                ? 'bg-blue-100 text-blue-700 font-medium'
                 : 'text-gray-700 hover:bg-gray-100 hover:text-blue-600'
             }`}
           >
             Games
           </Link>
-          <PrimaryButton 
+          <PrimaryButton
             text="Play a Game"
             onClick={() => setIsGameModalOpen(true)}
           />
@@ -71,9 +69,9 @@ export function NavBar() {
       </nav>
 
       {/* Game Creation Modal */}
-      <GameCreationModal 
-        isOpen={isGameModalOpen} 
-        onClose={() => setIsGameModalOpen(false)} 
+      <GameCreationModal
+        isOpen={isGameModalOpen}
+        onClose={() => setIsGameModalOpen(false)}
       />
     </div>
   );

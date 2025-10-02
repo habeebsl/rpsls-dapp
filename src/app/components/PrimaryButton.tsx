@@ -18,86 +18,111 @@ interface PrimaryButtonProps {
   className?: string;
   icon?: IconDefinition;
   iconPosition?: 'left' | 'right';
-  iconSize?: 'xs' | 'sm' | 'lg' | 'xl' | '2xl' | '1x' | '2x' | '3x' | '4x' | '5x' | '6x' | '7x' | '8x' | '9x' | '10x';
+  iconSize?:
+    | 'xs'
+    | 'sm'
+    | 'lg'
+    | 'xl'
+    | '2xl'
+    | '1x'
+    | '2x'
+    | '3x'
+    | '4x'
+    | '5x'
+    | '6x'
+    | '7x'
+    | '8x'
+    | '9x'
+    | '10x';
   shadowTop?: number;
   loadingText?: string;
 }
 
 export function PrimaryButton({
-  text = "Play a Game",
+  text = 'Play a Game',
   onClick,
   width = 138,
   height = 40,
-  backgroundColor = "bg-blue-500",
-  hoverBackgroundColor = "hover:bg-blue-600",
-  shadowColor = "bg-blue-800",
-  textColor = "text-white",
-  borderRadius = "rounded-lg",
-  className = "",
+  backgroundColor = 'bg-blue-500',
+  hoverBackgroundColor = 'hover:bg-blue-600',
+  shadowColor = 'bg-blue-800',
+  textColor = 'text-white',
+  borderRadius = 'rounded-lg',
+  className = '',
   icon,
-  iconPosition = "left",
-  iconSize = "sm",
+  iconPosition = 'left',
+  iconSize = 'sm',
   shadowTop = 3,
-  loadingText
+  loadingText,
 }: PrimaryButtonProps) {
   const [isPressed, setIsPressed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleMouseDown = () => {
-    if (isLoading) return;
+    // Prevent press effects when disabled/loading or no onClick handler
+    if (isLoading || !onClick) return;
     setIsPressed(true);
   };
 
   const handleMouseUp = async () => {
-    if (isLoading) return;
+    // Prevent interaction when disabled/loading or no onClick handler
+    if (isLoading || !onClick) return;
     setIsPressed(false);
-    
+
     // Call the callback after releasing the click
-    if (onClick) {
-      try {
-        setIsLoading(true);
-        await onClick();
-      } catch (error) {
-        console.error('Button callback error:', error);
-      } finally {
-        setIsLoading(false);
-      }
+    try {
+      setIsLoading(true);
+      await onClick();
+    } catch (error) {
+      console.error('Button callback error:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleMouseLeave = () => {
-    if (isLoading) return;
+    // Prevent interaction when disabled/loading or no onClick handler
+    if (isLoading || !onClick) return;
     // Reset pressed state if mouse leaves while pressed
     setIsPressed(false);
   };
 
   return (
-    <div className={`relative inline-block ${className}`} style={{ width: `${width}px` }}>
+    <div
+      className={`relative inline-block ${className}`}
+      style={{ 
+        width: `${width}px`,
+        height: `${height + shadowTop}px`, // Reserve space for shadow
+        overflow: 'hidden' // Prevent any content from overflowing
+      }}
+    >
       {/* Shadow/background container - hidden when pressed */}
       {!isPressed && (
-        <div 
-          className={`absolute left-0 ${shadowColor} ${borderRadius}`}
-          style={{ 
+        <div
+          className={`absolute left-0 ${borderRadius} ${isLoading ? 'bg-gray-600' : shadowColor}`}
+          style={{
             top: `${shadowTop}px`,
             width: `${width}px`,
-            height: `${height}px`
+            height: `${height}px`,
           }}
         ></div>
       )}
-      <button 
-        className={`relative z-10 px-3 py-2 ${borderRadius} transition-colors ${textColor} font-medium ${isLoading ? 'bg-gray-400 cursor-not-allowed' : `${backgroundColor} ${hoverBackgroundColor}`} flex items-center justify-center gap-2`}
-        style={{ 
+      <button
+        className={`relative z-10 px-3 py-2 ${borderRadius} transition-colors ${textColor} font-medium ${isLoading ? 'bg-gray-400 cursor-not-allowed' : `${backgroundColor} ${hoverBackgroundColor}`} flex items-center justify-center gap-2 overflow-hidden`}
+        style={{
           width: `${width}px`,
-          height: `${height}px`
+          height: `${height}px`,
+          // When pressed AND not loading AND onClick exists, move button down to where shadow was
+          top: (isPressed && !isLoading && onClick) ? `${shadowTop}px` : '0px',
         }}
-        onMouseDown={handleMouseDown}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseLeave}
+        onMouseDown={(!isLoading && onClick) ? handleMouseDown : undefined}
+        onMouseUp={(!isLoading && onClick) ? handleMouseUp : undefined}
+        onMouseLeave={(!isLoading && onClick) ? handleMouseLeave : undefined}
         disabled={isLoading}
       >
         {isLoading ? (
           <>
-            <LoadingSpinner size="sm" />
+            <LoadingSpinner size={height <= 35 ? "xs" : "sm"} />
             <span>{loadingText || 'Loading...'}</span>
           </>
         ) : (

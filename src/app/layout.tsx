@@ -3,6 +3,8 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import '@/lib/fontawesome'; // Initialize Font Awesome
 import { NavBar } from './components/Navbar';
+import { GlobalConfirmationModal } from './components/GlobalConfirmationModal';
+import { NotificationProvider } from './components/NotificationProvider';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -24,7 +26,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.className} antialiased`}>
         <NavBar />
+        <NotificationProvider />
         <main>{children}</main>
+        <GlobalConfirmationModal />
       </body>
     </html>
   );

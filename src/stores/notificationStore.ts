@@ -1,18 +1,18 @@
 import { create } from 'zustand';
+import { notificationApi } from '@/services/api';
+import { PersistentNotification } from '@/types';
 
+// Simplified notification interface - all notifications are persistent
 export interface Notification {
     id: string;
     message: string;
     type: 'info' | 'success' | 'warning' | 'error' | 'game-request' | 'move-needed' | 'game-completed';
     timestamp: Date;
     read: boolean;
-    actionType?: 'accept' | 'view' | 'play-move';
+    actionRequired?: 'accept' | 'view' | 'play-move';
     gameId?: string;
-    fromPlayer?: string;
-    // Additional fields for persistent notifications
-    from?: string;
-    to?: string;
-    persistent?: boolean; // Flag to distinguish between local and persistent notifications
+    from: string;
+    to: string;
 }
 
 interface NotificationState {
@@ -22,16 +22,20 @@ interface NotificationState {
     isLoading: boolean;
     lastFetch: Date | null;
     
-    // Local notification methods (for temporary notifications)
-    addNotification: (message: string, type?: Notification['type'], actionType?: 'accept' | 'view', gameId?: string, fromPlayer?: string) => void;
-    
-    // Persistent notification methods (sync with Redis)
+    addNotification: (
+        message: string,
+        type: Notification['type'],
+        from: string,
+        to: string,
+        actionRequired?: 'accept' | 'view' | 'play-move',
+        gameId?: string
+    ) => Promise<void>;
     loadNotifications: (userAddress: string) => Promise<void>;
-    markAsRead: (id: string, userAddress?: string) => Promise<void>;
+    markAsRead: (id: string, userAddress: string) => Promise<void>;
     markAllAsRead: () => void;
     removeNotification: (id: string) => void;
-    clearAll: () => void;
-    
+    clearAll: (userAddress: string) => Promise<void>;
+
     // UI methods
     toggleOpen: () => void;
     setOpen: (open: boolean) => void;
@@ -44,86 +48,73 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
     isLoading: false,
     lastFetch: null,
 
-    // Add local (temporary) notification
-    addNotification: (message: string, type: Notification['type'] = 'info', actionType?: 'accept' | 'view', gameId?: string, fromPlayer?: string) => {
-        const newNotification: Notification = {
-            id: Date.now().toString(),
-            message,
-            type,
-            timestamp: new Date(),
-            read: false,
-            actionType,
-            gameId,
-            fromPlayer,
-            persistent: false, // Local notification
-        };
+    // Add persistent notification - much simpler!
+    addNotification: async (
+        message: string,
+        type: Notification['type'],
+        from: string,
+        to: string,
+        actionRequired?: 'accept' | 'view' | 'play-move',
+        gameId?: string
+    ) => {
+        try {
+            // Create notification via API service
+            await notificationApi.addNotification({
+                message,
+                type,
+                from,
+                to,
+                actionRequired,
+                gameId,
+            });
 
-        set(state => {
-            const notifications = [newNotification, ...state.notifications];
-            const unreadCount = notifications.filter(n => !n.read).length;
-
-            return {
-                notifications,
-                unreadCount,
-                isOpen: true, // Auto-open when new notification arrives
-            };
-        });
+            // Reload notifications to get the updated list
+            await get().loadNotifications(to);
+            
+            // Auto-open panel for new notifications
+            set({ isOpen: true });
+        } catch (error) {
+            console.error('Error adding notification:', error);
+            throw error;
+        }
     },
 
-    // Load persistent notifications from Redis
+    // Load all notifications from Redis via API service
     loadNotifications: async (userAddress: string) => {
         set({ isLoading: true });
-        
+
         try {
-            const response = await fetch(`/api/notifications?address=${userAddress}`);
-            
-            if (!response.ok) {
-                throw new Error('Failed to fetch notifications');
-            }
-            
-            const data = await response.json();
-            
-            // Convert persistent notifications to local format
-            const persistentNotifications: Notification[] = data.notifications.map((n: any) => ({
+            const data = await notificationApi.loadNotifications(userAddress);
+
+            // Convert API response to local format
+            const notifications: Notification[] = data.notifications.map((n: PersistentNotification) => ({
                 id: n.id,
                 message: n.message,
                 type: n.type,
                 timestamp: new Date(n.timestamp),
                 read: n.read,
-                actionType: n.actionRequired,
+                actionRequired: n.actionRequired,
                 gameId: n.gameId,
-                fromPlayer: n.from,
                 from: n.from,
                 to: n.to,
-                persistent: true, // Mark as persistent
             }));
 
-            set(state => {
-                // Keep local notifications, replace persistent ones
-                const localNotifications = state.notifications.filter(n => !n.persistent);
-                const allNotifications = [...localNotifications, ...persistentNotifications];
-                
-                return {
-                    notifications: allNotifications,
-                    unreadCount: data.unreadCount + localNotifications.filter(n => !n.read).length,
-                    lastFetch: new Date(),
-                    isLoading: false,
-                };
+            set({
+                notifications,
+                unreadCount: data.unreadCount,
+                lastFetch: new Date(),
+                isLoading: false,
             });
         } catch (error) {
             console.error('Error loading notifications:', error);
             set({ isLoading: false });
+            throw error;
         }
     },
 
-    // Mark notification as read
-    markAsRead: async (id: string, userAddress?: string) => {
-        const state = get();
-        const notification = state.notifications.find(n => n.id === id);
-        
-        if (!notification) return;
-
-        // Update local state immediately
+    // Mark notification as read via API service
+    markAsRead: async (id: string, userAddress: string) => {
+        // Update local state immediately for better UX
         set(state => {
             const notifications = state.notifications.map(n =>
                 n.id === id ? { ...n, read: true } : n
@@ -133,22 +124,20 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
             return { notifications, unreadCount };
         });
 
-        // If it's a persistent notification, update Redis
-        if (notification.persistent && userAddress) {
-            try {
-                const response = await fetch(`/api/notifications/${id}/read`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userAddress }),
-                });
-
-                if (!response.ok) {
-                    console.error('Failed to mark notification as read in Redis');
-                    // Optionally revert local state on error
-                }
-            } catch (error) {
-                console.error('Error marking notification as read:', error);
-            }
+        try {
+            // Sync with Redis via API service
+            await notificationApi.markAsRead(id, userAddress);
+        } catch (error) {
+            console.error('Error marking notification as read:', error);
+            // Optionally revert local state on error
+            set(state => {
+                const notifications = state.notifications.map(n =>
+                    n.id === id ? { ...n, read: false } : n
+                );
+                const unreadCount = notifications.filter(n => !n.read).length;
+                return { notifications, unreadCount };
+            });
+            throw error;
         }
     },
 
@@ -173,12 +162,21 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
         });
     },
 
-    clearAll: () => {
-        set({
-            notifications: [],
-            unreadCount: 0,
-            isOpen: false,
-        });
+    clearAll: async (userAddress: string) => {
+        try {
+            // Clear on backend first
+            await notificationApi.clearAllNotifications(userAddress);
+            
+            // Then update local state
+            set({
+                notifications: [],
+                unreadCount: 0,
+                isOpen: false,
+            });
+        } catch (error) {
+            console.error('Error clearing all notifications:', error);
+            throw error;
+        }
     },
 
     toggleOpen: () => {

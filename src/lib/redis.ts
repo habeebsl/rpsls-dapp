@@ -8,8 +8,7 @@ const userPrefixKey = 'rpsls-account:';
 const notificationPrefixKey = 'rpsls-notifications:';
 const notificationCountKey = 'rpsls-notification-count:';
 
-interface GameResult {
-    id: string;
+export interface GameResult {
     stake: string;
     contractAddress: string;
     status: 'pending' | 'completed' | 'timeout';
@@ -163,5 +162,22 @@ export async function getUnreadNotificationCount(userAddress: string): Promise<n
     } catch (error) {
         console.error('Error getting unread notification count:', error);
         return 0;
+    }
+}
+
+export async function clearAllNotifications(userAddress: string): Promise<boolean> {
+    try {
+        await ensureConnection();
+        const notificationKey = `${notificationPrefixKey}${userAddress}`;
+        const countKey = `${notificationCountKey}${userAddress}`;
+        
+        // Delete the notification list and count
+        await client.del(notificationKey);
+        await client.del(countKey);
+        
+        return true;
+    } catch (error) {
+        console.error('Error clearing all notifications:', error);
+        throw error;
     }
 }

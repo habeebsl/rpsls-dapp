@@ -6,6 +6,9 @@ import {
 } from '@/lib/metamask';
 import { ethers } from 'ethers';
 
+// Event callback type for blockchain state changes
+type StateChangeCallback = () => void;
+
 interface WalletState {
     isConnected: boolean | null; // null = loading, true = connected, false = not connected
     address: string | null;
@@ -14,6 +17,8 @@ interface WalletState {
     connect: () => Promise<void>;
     disconnect: () => void;
     checkConnection: () => Promise<boolean>;
+    subscribeToStateChanges: (callback: StateChangeCallback) => () => void;
+    _stateChangeCallbacks: Set<StateChangeCallback>;
 }
 
 export const useWalletStore = create<WalletState>((set, get) => ({
@@ -21,6 +26,7 @@ export const useWalletStore = create<WalletState>((set, get) => ({
     address: null,
     signer: null,
     isLoading: false,
+    _stateChangeCallbacks: new Set<StateChangeCallback>(),
 
     connect: async () => {
         set({ isLoading: true });
@@ -92,5 +98,59 @@ export const useWalletStore = create<WalletState>((set, get) => ({
             });
             return false;
         }
+    },
+
+    subscribeToStateChanges: (callback: StateChangeCallback) => {
+        const { _stateChangeCallbacks } = get();
+        _stateChangeCallbacks.add(callback);
+        
+        // Setup MetaMask event listeners if this is the first subscription
+        if (_stateChangeCallbacks.size === 1) {
+            const setupProviderListeners = async () => {
+                if (typeof window !== 'undefined' && (window as any).ethereum) {
+                    const provider = (window as any).ethereum;
+
+                    const notifyCallbacks = () => {
+                        _stateChangeCallbacks.forEach(cb => cb());
+                    };
+
+                    const handleAccountsChanged = (accounts: string[]) => {
+                        console.log('🔄 MetaMask accounts changed:', accounts);
+                        notifyCallbacks();
+                    };
+
+                    const handleChainChanged = (chainId: string) => {
+                        console.log('🔄 MetaMask chain changed:', chainId);
+                        notifyCallbacks();
+                    };
+
+                    const handleConnect = () => {
+                        console.log('🔄 MetaMask connected');
+                        notifyCallbacks();
+                    };
+
+                    const handleDisconnect = () => {
+                        console.log('🔄 MetaMask disconnected');
+                        notifyCallbacks();
+                    };
+
+                    // Add listeners
+                    provider.on('accountsChanged', handleAccountsChanged);
+                    provider.on('chainChanged', handleChainChanged);
+                    provider.on('connect', handleConnect);
+                    provider.on('disconnect', handleDisconnect);
+
+                    console.log('✅ MetaMask provider event listeners setup');
+                }
+            };
+
+            setupProviderListeners();
+        }
+
+        // Return unsubscribe function
+        return () => {
+            const { _stateChangeCallbacks } = get();
+            _stateChangeCallbacks.delete(callback);
+        };
     },
 }));

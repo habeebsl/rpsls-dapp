@@ -14,27 +14,37 @@ export function LoadingScreen() {
             className="text-blue-600 animate-pulse"
             style={{
               fontSize: '6rem',
-              animation: 'pulse-scale 1.5s ease-in-out infinite'
+              animation: 'pulse-scale 1.5s ease-in-out infinite',
             }}
           />
         </div>
-        
+
         {/* Loading Text */}
         <h2 className="text-2xl font-semibold text-gray-700 mb-2">Loading</h2>
         <p className="text-gray-500">Connecting to MetaMask...</p>
-        
+
         {/* Loading Dots Animation */}
         <div className="flex justify-center mt-4 space-x-1">
-          <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-          <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-          <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+          <div
+            className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"
+            style={{ animationDelay: '0ms' }}
+          ></div>
+          <div
+            className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"
+            style={{ animationDelay: '150ms' }}
+          ></div>
+          <div
+            className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"
+            style={{ animationDelay: '300ms' }}
+          ></div>
         </div>
       </div>
-      
+
       {/* Custom CSS for scale pulse animation */}
       <style jsx>{`
         @keyframes pulse-scale {
-          0%, 100% {
+          0%,
+          100% {
             transform: scale(1);
             opacity: 1;
           }

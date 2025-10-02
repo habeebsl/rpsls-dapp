@@ -10,87 +10,91 @@ import { useWalletStore } from '@/stores/walletStore';
  * - User is active (not idle)
  */
 export function useNotificationPolling() {
-  const { loadNotifications, lastFetch } = useNotificationStore();
-  const { isConnected, address } = useWalletStore();
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const isPollingRef = useRef(false);
+    const { loadNotifications, lastFetch } = useNotificationStore();
+    const { isConnected, address } = useWalletStore();
+    const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    const isPollingRef = useRef(false);
 
-  const startPolling = () => {
-    if (!address || !isConnected || isPollingRef.current) return;
+    const startPolling = () => {
+        if (!address || !isConnected || isPollingRef.current) return;
 
-    isPollingRef.current = true;
+        isPollingRef.current = true;
 
-    // Initial load
-    loadNotifications(address);
-
-    // Set up polling interval (30 seconds)
-    intervalRef.current = setInterval(() => {
-      if (address && isConnected && !document.hidden) {
+        // Initial load
         loadNotifications(address);
-      }
-    }, 30000); // 30 seconds
 
-    console.log('Notification polling started');
-  };
+        // Set up polling interval (30 seconds)
+        intervalRef.current = setInterval(() => {
+            if (address && isConnected && !document.hidden) {
+                loadNotifications(address);
+            }
+        }, 30000); // 30 seconds
 
-  const stopPolling = () => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-    isPollingRef.current = false;
-    console.log('Notification polling stopped');
-  };
-
-  // Handle visibility change (pause when tab is hidden)
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        stopPolling();
-      } else if (address && isConnected) {
-        startPolling();
-      }
+        console.log('Notification polling started');
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [address, isConnected]);
-
-  // Handle focus events (refresh when user returns to app)
-  useEffect(() => {
-    const handleFocus = () => {
-      if (address && isConnected) {
-        loadNotifications(address);
-      }
+    const stopPolling = () => {
+        if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+        }
+        isPollingRef.current = false;
+        console.log('Notification polling stopped');
     };
 
-    window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
-  }, [address, isConnected, loadNotifications]);
+    // Handle visibility change (pause when tab is hidden)
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+                stopPolling();
+            } else if (address && isConnected) {
+                startPolling();
+            }
+        };
 
-  // Start/stop polling based on wallet connection
-  useEffect(() => {
-    if (address && isConnected) {
-      startPolling();
-    } else {
-      stopPolling();
-    }
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () =>
+            document.removeEventListener(
+                'visibilitychange',
+                handleVisibilityChange
+            );
+    }, [address, isConnected]);
 
-    return () => stopPolling();
-  }, [address, isConnected]);
+    // Handle focus events (refresh when user returns to app)
+    useEffect(() => {
+        const handleFocus = () => {
+            if (address && isConnected) {
+                loadNotifications(address);
+            }
+        };
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => stopPolling();
-  }, []);
+        window.addEventListener('focus', handleFocus);
+        return () => window.removeEventListener('focus', handleFocus);
+    }, [address, isConnected, loadNotifications]);
 
-  return {
-    isPolling: isPollingRef.current,
-    lastFetch,
-    manualRefresh: () => {
-      if (address && isConnected) {
-        loadNotifications(address);
-      }
-    }
-  };
+    // Start/stop polling based on wallet connection
+    useEffect(() => {
+        if (address && isConnected) {
+            startPolling();
+        } else {
+            stopPolling();
+        }
+
+        return () => stopPolling();
+    }, [address, isConnected]);
+
+    // Cleanup on unmount
+    useEffect(() => {
+        return () => stopPolling();
+    }, []);
+
+    return {
+        isPolling: isPollingRef.current,
+        lastFetch,
+        manualRefresh: () => {
+            if (address && isConnected) {
+                loadNotifications(address);
+            }
+        },
+    };
 }

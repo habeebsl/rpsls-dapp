@@ -1,9 +1,17 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBell, faTimes, faCheck, faHandshake, faEye } from '@fortawesome/free-solid-svg-icons';
+import {
+  faBell,
+  faTimes,
+  faCheck,
+  faHandshake,
+  faEye,
+} from '@fortawesome/free-solid-svg-icons';
 import { useNotificationStore } from '@/stores/notificationStore';
+import { useWalletStore } from '@/stores/walletStore';
 import { PrimaryButton } from './PrimaryButton';
 
 export function NotificationBell() {
@@ -17,6 +25,9 @@ export function NotificationBell() {
     markAllAsRead,
     removeNotification,
   } = useNotificationStore();
+  
+  const { address } = useWalletStore();
+  const router = useRouter();
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -40,14 +51,36 @@ export function NotificationBell() {
     };
   }, [isOpen, setOpen]);
 
-  const handleAcceptGame = (gameId: string, fromPlayer: string) => {
-    console.log(`Accepting game request from ${fromPlayer}, gameId: ${gameId}`);
-    // TODO: Implement actual game acceptance logic
+  const handleAcceptGame = async (notificationId: string, gameId: string, fromPlayer: string) => {
+    try {
+      // Check if notification is already read before marking
+      const notification = notifications.find(n => n.id === notificationId);
+      if (address && notification && !notification.read) {
+        await markAsRead(notificationId, address);
+      }
+      // Navigate to the game page (gameId is the contract address)
+      router.push(`/game/${gameId}`);
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+      // Still navigate even if marking as read fails
+      router.push(`/game/${gameId}`);
+    }
   };
 
-  const handleViewGame = (gameId: string) => {
-    console.log(`Viewing game ${gameId}`);
-    // TODO: Navigate to game component
+  const handleViewGame = async (notificationId: string, gameId: string) => {
+    try {
+      // Check if notification is already read before marking
+      const notification = notifications.find(n => n.id === notificationId);
+      if (address && notification && !notification.read) {
+        await markAsRead(notificationId, address);
+      }
+      // Navigate to the game page (gameId is the contract address)
+      router.push(`/game/${gameId}`);
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+      // Still navigate even if marking as read fails
+      router.push(`/game/${gameId}`);
+    }
   };
 
   const getNotificationIcon = (type: string) => {
@@ -64,6 +97,41 @@ export function NotificationBell() {
         return '⏰';
       default:
         return 'ℹ️';
+    }
+  };
+
+  const handleMarkAllAsRead = async () => {
+    if (!address) return;
+    
+    try {
+      // Only mark unread notifications as read
+      const unreadNotifications = notifications.filter(n => !n.read);
+      
+      // Mark each unread notification as read
+      for (const notification of unreadNotifications) {
+        await markAsRead(notification.id, address);
+      }
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+    }
+  };
+
+  const handleRemoveNotification = async (notificationId: string) => {
+    try {
+      // Find the notification to check if it's unread
+      const notification = notifications.find(n => n.id === notificationId);
+      
+      // If it's unread, mark it as read first to keep count accurate
+      if (address && notification && !notification.read) {
+        await markAsRead(notificationId, address);
+      }
+      
+      // Then remove it from local state
+      removeNotification(notificationId);
+    } catch (error) {
+      console.error('Error removing notification:', error);
+      // Still remove locally even if backend fails
+      removeNotification(notificationId);
     }
   };
 
@@ -84,13 +152,13 @@ export function NotificationBell() {
       <button
         onClick={toggleOpen}
         className={`relative p-2 rounded-full transition-colors ${
-          isOpen 
-            ? 'bg-blue-600 text-white' 
+          isOpen
+            ? 'bg-blue-600 text-white'
             : 'text-yellow-500 hover:bg-gray-100 hover:text-yellow-600'
         }`}
         aria-label="Notifications"
       >
-        <FontAwesomeIcon icon={faBell} size={"lg"} />
+        <FontAwesomeIcon icon={faBell} size={'lg'} />
 
         {/* Red Indicator Badge */}
         {unreadCount > 0 && (
@@ -110,7 +178,7 @@ export function NotificationBell() {
             </h3>
             {unreadCount > 0 && (
               <button
-                onClick={markAllAsRead}
+                onClick={handleMarkAllAsRead}
                 className="text-sm text-blue-600 hover:text-blue-800 font-medium"
               >
                 Mark all read
@@ -125,7 +193,7 @@ export function NotificationBell() {
                 <FontAwesomeIcon
                   icon={faBell}
                   className="mx-auto mb-2 text-gray-300"
-                  size={"lg"}
+                  size={'lg'}
                 />
                 <p>No notifications yet</p>
               </div>
@@ -152,34 +220,47 @@ export function NotificationBell() {
                       <p className="text-xs text-gray-500 mt-1">
                         {formatTime(notification.timestamp)}
                       </p>
-                      
+
                       {/* Action Buttons */}
-                      {notification.actionType && (
+                      {notification.actionRequired && (
                         <div className="mt-3 flex gap-2">
-                          {notification.actionType === 'accept' && (
+                          {notification.actionRequired === 'accept' && (
                             <PrimaryButton
                               text="Accept"
                               icon={faHandshake}
-                              width={80}
+                              width={100}
                               height={32}
+                              shadowTop={2}
                               className="text-xs"
                               backgroundColor="bg-green-500"
                               hoverBackgroundColor="hover:bg-green-600"
                               shadowColor="bg-green-700"
-                              onClick={() => handleAcceptGame(notification.gameId!, notification.fromPlayer!)}
+                              onClick={() =>
+                                handleAcceptGame(
+                                  notification.id,
+                                  notification.gameId!,
+                                  notification.from!
+                                )
+                              }
                             />
                           )}
-                          {notification.actionType === 'view' && (
+                          {notification.actionRequired === 'view' && (
                             <PrimaryButton
                               text="View"
                               icon={faEye}
-                              width={70}
+                              width={90}
                               height={32}
+                              shadowTop={2}
                               className="text-xs"
                               backgroundColor="bg-blue-500"
                               hoverBackgroundColor="hover:bg-blue-600"
                               shadowColor="bg-blue-700"
-                              onClick={() => handleViewGame(notification.gameId!)}
+                              onClick={() =>
+                                handleViewGame(
+                                  notification.id,
+                                  notification.gameId!
+                                )
+                              }
                             />
                           )}
                         </div>
@@ -189,7 +270,7 @@ export function NotificationBell() {
                     <div className="flex items-center gap-1 ml-2">
                       {!notification.read && (
                         <button
-                          onClick={() => markAsRead(notification.id)}
+                          onClick={() => address && markAsRead(notification.id, address)}
                           className="p-1 text-blue-600 hover:text-blue-800 rounded"
                           title="Mark as read"
                         >
@@ -197,7 +278,7 @@ export function NotificationBell() {
                         </button>
                       )}
                       <button
-                        onClick={() => removeNotification(notification.id)}
+                        onClick={() => handleRemoveNotification(notification.id)}
                         className="p-1 text-gray-400 hover:text-red-600 rounded"
                         title="Remove notification"
                       >
@@ -214,8 +295,14 @@ export function NotificationBell() {
           {notifications.length > 0 && (
             <div className="px-4 py-2 border-t border-gray-200 bg-gray-50">
               <button
-                onClick={() => {
-                  useNotificationStore.getState().clearAll();
+                onClick={async () => {
+                  if (address) {
+                    try {
+                      await useNotificationStore.getState().clearAll(address);
+                    } catch (error) {
+                      console.error('Failed to clear notifications:', error);
+                    }
+                  }
                 }}
                 className="text-xs text-gray-600 hover:text-gray-800"
               >
