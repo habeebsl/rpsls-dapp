@@ -455,7 +455,7 @@ export default function GamePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 relative">
+    <div className="min-h-screen bg-gray-100 relative overflow-hidden">
       <div className="container mx-auto px-4 max-w-4xl pt-30 pb-28 md:pb-4">
         {/* Game Action Buttons */}
         <GameActionButtons

@@ -1,10 +1,7 @@
 'use client';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faCheck,
-  faTimes,
-} from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { Move } from '@/types';
 import { useConfirmationStore } from '@/stores/confirmationStore';
 import { getMoveIcon } from '@/lib/moves';
@@ -18,8 +15,6 @@ interface MoveCardProps {
   onUnselect: () => void;
   onConfirm: (move: Move) => Promise<void>;
 }
-
-
 
 export function MoveCard({
   move,
@@ -42,7 +37,7 @@ export function MoveCard({
   const handleConfirmClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (isDisabled || isLocked) return;
-    
+
     // Open global confirmation modal
     openConfirmation({
       move,
@@ -74,7 +69,7 @@ export function MoveCard({
     <>
       <div
         className={`
-          relative w-32 h-32 rounded-lg shadow-lg cursor-pointer transition-all duration-300 
+          relative w-28 h-28 sm:w-32 sm:h-32 rounded-lg shadow-lg cursor-pointer transition-all duration-300
           ${isDisabled || isLocked ? 'cursor-not-allowed' : 'hover:shadow-xl'}
           ${isSelected && !isLocked ? 'ring-4 ring-blue-500 bg-blue-50' : 'bg-white'}
           ${isLocked && isSelected ? 'bg-green-50 ring-4 ring-green-500' : ''}
@@ -111,11 +106,11 @@ export function MoveCard({
         )}
 
         {/* Card Content */}
-        <div className="h-full flex flex-col items-center justify-center p-4">
+        <div className="h-full flex flex-col items-center justify-center p-2 sm:p-4">
           {/* Move Icon */}
           <div
             className={`
-            text-4xl mb-3 transition-colors
+            text-3xl sm:text-4xl mb-2 sm:mb-3 transition-colors
             ${isSelected && !isLocked ? 'text-blue-600' : ''}
             ${isLocked && isSelected ? 'text-green-600' : ''}
             ${isDisabled && !isSelected ? 'text-gray-400' : 'text-gray-700'}
@@ -127,7 +122,7 @@ export function MoveCard({
           {/* Move Name */}
           <div
             className={`
-            text-sm font-medium text-center transition-colors
+            text-xs sm:text-sm font-medium text-center transition-colors
             ${isSelected && !isLocked ? 'text-blue-800' : ''}
             ${isLocked && isSelected ? 'text-green-800' : ''}
             ${isDisabled && !isSelected ? 'text-gray-400' : 'text-gray-700'}
@@ -137,7 +132,6 @@ export function MoveCard({
           </div>
         </div>
       </div>
-
     </>
   );
 }

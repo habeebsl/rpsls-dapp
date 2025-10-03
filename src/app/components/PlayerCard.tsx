@@ -71,30 +71,31 @@ export function PlayerCard({
 
   // Determine if we should show the timer (only show on the player who needs to act)
   // Show timer for any player who hasn't completed their current required action
-  const shouldShowTimer = !gameHasEnded && !hasPlayed && lastAction && lastAction !== '0';
+  const shouldShowTimer =
+    !gameHasEnded && !hasPlayed && lastAction && lastAction !== '0';
 
   // Get result indicator configuration
   const getResultIndicator = () => {
     if (!gameHasEnded || !gameResult) return null;
-    
+
     switch (gameResult) {
       case 'win':
         return {
           icon: faCrown,
           bgColor: 'bg-yellow-500',
-          label: 'Won'
+          label: 'Won',
         };
       case 'loss':
         return {
           icon: faFlag,
           bgColor: 'bg-red-500',
-          label: 'Lost'
+          label: 'Lost',
         };
       case 'tie':
         return {
           icon: faHandshake,
           bgColor: 'bg-blue-500',
-          label: 'Tied'
+          label: 'Tied',
         };
       default:
         return null;
@@ -107,31 +108,39 @@ export function PlayerCard({
     <div className="relative">
       {/* Timer or Result indicator in top-right corner */}
       {shouldShowTimer && (
-        <div className="absolute -top-2 -right-2 z-10">
+        <div className="absolute -top-1 -right-1 md:-top-2 md:-right-2 z-10">
           {isTimeout ? (
-            <div className="bg-red-500 text-white p-2 rounded-full shadow-lg border-2 border-white">
-              <FontAwesomeIcon icon={faStopwatch} size={'lg'} />
+            <div className="bg-red-500 text-white w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full shadow-lg border-2 border-white">
+              <FontAwesomeIcon
+                icon={faStopwatch}
+                className="text-sm md:text-base"
+              />
             </div>
           ) : (
-            <div className="bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-mono shadow-lg border-2 border-white">
+            <div className="bg-blue-500 text-white px-2 py-0.5 md:px-3 md:py-1 rounded-full text-xs md:text-sm font-mono shadow-lg border-2 border-white">
               {formatTime(timeRemaining)}
             </div>
           )}
         </div>
       )}
-      
+
       {/* Game result indicator */}
       {resultIndicator && (
-        <div className="absolute -top-2 -right-2 z-10">
-          <div className={`${resultIndicator.bgColor} text-white p-2 rounded-full shadow-lg border-2 border-white`}>
-            <FontAwesomeIcon icon={resultIndicator.icon} size={'lg'} />
+        <div className="absolute -top-1 -right-1 md:-top-2 md:-right-2 z-10">
+          <div
+            className={`${resultIndicator.bgColor} text-white w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full shadow-lg border-2 border-white`}
+          >
+            <FontAwesomeIcon
+              icon={resultIndicator.icon}
+              className="text-sm md:text-base"
+            />
           </div>
         </div>
       )}
 
       {/* Main card container */}
       <div
-        className={`relative w-48 h-48 rounded-lg shadow-lg overflow-hidden transition-all duration-300 ${
+        className={`relative w-36 h-36 md:w-48 md:h-48 rounded-lg shadow-lg overflow-hidden transition-all duration-300 ${
           hasPlayed
             ? 'bg-green-500 border-2 border-green-600'
             : 'bg-gray-400 border-2 border-gray-500'
@@ -156,10 +165,10 @@ export function PlayerCard({
         </div>
 
         {/* Card content */}
-        <div className="relative z-10 h-full flex flex-col justify-between p-4">
+        <div className="relative z-10 h-full flex flex-col justify-between p-3 md:p-4">
           {/* Player identifier */}
           <div className="text-center">
-            <h3 className="text-white text-lg font-bold mb-1">
+            <h3 className="text-white text-base md:text-lg font-bold mb-1">
               {isCurrentUser ? 'You' : 'Opponent'}
             </h3>
             <p className="text-white/80 text-xs font-mono">
@@ -169,18 +178,25 @@ export function PlayerCard({
 
           {/* Status indicator */}
           <div className="text-center">
-            <div className="text-white mb-2">
+            <div className="text-white mb-1 md:mb-2">
               {hasPlayed ? (
-                <FontAwesomeIcon icon={faCheck} size={'lg'} />
+                <FontAwesomeIcon
+                  icon={faCheck}
+                  className="text-lg md:text-xl"
+                />
               ) : (
-                <FontAwesomeIcon icon={faClock} size={'lg'} />
+                <FontAwesomeIcon
+                  icon={faClock}
+                  className="text-lg md:text-xl"
+                />
               )}
             </div>
-            <p className="text-white text-sm font-medium">
-              {hasPlayed 
-                ? 'Move Selected' 
-                : (isJ1 ? 'Reveal move' : 'Select a move')
-              }
+            <p className="text-white text-xs md:text-sm font-medium">
+              {hasPlayed
+                ? 'Move Selected'
+                : isJ1
+                  ? 'Reveal move'
+                  : 'Select a move'}
             </p>
           </div>
         </div>

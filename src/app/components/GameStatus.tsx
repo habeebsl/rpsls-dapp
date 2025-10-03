@@ -23,7 +23,7 @@ export function GameStatus({
   j2Result,
 }: GameStatusProps) {
   return (
-    <div className="flex justify-center items-center gap-8 mb-8">
+    <div className="flex justify-center items-center gap-3 md:gap-8 mb-6 md:mb-8">
       {/* Player 1 Card */}
       <PlayerCard
         address={gameState.j1}
@@ -36,7 +36,7 @@ export function GameStatus({
       />
 
       {/* VS Text */}
-      <div className="text-4xl font-bold text-gray-400">VS</div>
+      <div className="text-2xl md:text-4xl font-bold text-gray-400">VS</div>
 
       {/* Player 2 Card */}
       <PlayerCard

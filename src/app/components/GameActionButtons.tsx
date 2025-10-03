@@ -36,7 +36,7 @@ export function GameActionButtons({
   return (
     <>
       {/* Desktop: Floating buttons on right side */}
-      <div className="hidden md:flex md:absolute md:top-30 md:right-10 md:z-10 md:flex-col md:gap-8">
+      <div className="hidden lg:flex lg:absolute lg:top-30 lg:right-10 lg:z-10 lg:flex-col lg:gap-8">
         {/* Reveal Move Button - Only show for J1 */}
         {showRevealButton && (
           <PrimaryButton
@@ -69,7 +69,7 @@ export function GameActionButtons({
       {/* Mobile: Fixed bottom bar */}
       <div
         className="
-        md:hidden
+        lg:hidden
         fixed bottom-0 left-0 right-0 z-50
         px-4 pt-4 pb-4
         bg-gray-100
