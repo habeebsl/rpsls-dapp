@@ -41,7 +41,7 @@ interface PrimaryButtonProps {
 export function PrimaryButton({
   text = 'Play a Game',
   onClick,
-  width = 138,
+  width,
   height = 40,
   backgroundColor = 'bg-blue-500',
   hoverBackgroundColor = 'hover:bg-blue-600',
@@ -57,6 +57,9 @@ export function PrimaryButton({
 }: PrimaryButtonProps) {
   const [isPressed, setIsPressed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Use explicit width if provided, otherwise let CSS handle it
+  const widthStyle = width !== undefined ? `${width}px` : undefined;
 
   const handleMouseDown = () => {
     // Prevent press effects when disabled/loading or no onClick handler
@@ -89,40 +92,40 @@ export function PrimaryButton({
 
   return (
     <div
-      className={`relative inline-block ${className}`}
-      style={{ 
-        width: `${width}px`,
+      className={`relative ${className}`}
+      style={{
+        width: widthStyle,
         height: `${height + shadowTop}px`, // Reserve space for shadow
-        overflow: 'hidden' // Prevent any content from overflowing
+        overflow: widthStyle ? 'hidden' : 'visible', // Only hide overflow when width is set
       }}
     >
       {/* Shadow/background container - hidden when pressed */}
       {!isPressed && (
         <div
-          className={`absolute left-0 ${borderRadius} ${isLoading ? 'bg-gray-600' : shadowColor}`}
+          className={`absolute left-0 right-0 ${borderRadius} ${isLoading ? 'bg-gray-600' : shadowColor}`}
           style={{
             top: `${shadowTop}px`,
-            width: `${width}px`,
+            width: widthStyle,
             height: `${height}px`,
           }}
         ></div>
       )}
       <button
-        className={`relative z-10 px-3 py-2 ${borderRadius} transition-colors ${textColor} font-medium ${isLoading ? 'bg-gray-400 cursor-not-allowed' : `${backgroundColor} ${hoverBackgroundColor}`} flex items-center justify-center gap-2 overflow-hidden`}
+        className={`relative z-10 px-3 py-2 ${borderRadius} transition-colors ${textColor} font-medium ${isLoading ? 'bg-gray-400 cursor-not-allowed' : `${backgroundColor} ${hoverBackgroundColor}`} flex items-center justify-center gap-2 overflow-hidden w-full`}
         style={{
-          width: `${width}px`,
+          width: widthStyle,
           height: `${height}px`,
           // When pressed AND not loading AND onClick exists, move button down to where shadow was
-          top: (isPressed && !isLoading && onClick) ? `${shadowTop}px` : '0px',
+          top: isPressed && !isLoading && onClick ? `${shadowTop}px` : '0px',
         }}
-        onMouseDown={(!isLoading && onClick) ? handleMouseDown : undefined}
-        onMouseUp={(!isLoading && onClick) ? handleMouseUp : undefined}
-        onMouseLeave={(!isLoading && onClick) ? handleMouseLeave : undefined}
+        onMouseDown={!isLoading && onClick ? handleMouseDown : undefined}
+        onMouseUp={!isLoading && onClick ? handleMouseUp : undefined}
+        onMouseLeave={!isLoading && onClick ? handleMouseLeave : undefined}
         disabled={isLoading}
       >
         {isLoading ? (
           <>
-            <LoadingSpinner size={height <= 35 ? "xs" : "sm"} />
+            <LoadingSpinner size={height <= 35 ? 'xs' : 'sm'} />
             <span>{loadingText || 'Loading...'}</span>
           </>
         ) : (

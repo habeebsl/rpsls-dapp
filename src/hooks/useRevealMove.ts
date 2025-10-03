@@ -132,6 +132,7 @@ export function useRevealMove({
 
             const completedAt = new Date().toISOString();
             const opponentAddress = gameState.j2; // J2 is the opponent for J1
+            const j2Move = NUMBER_TO_MOVE[gameState.c2];
 
             // Update game result for J1 (current user)
             let j1Result: 'win' | 'loss' | 'tie';
@@ -146,7 +147,8 @@ export function useRevealMove({
                     status: 'completed',
                     type: j1Result,
                     completedAt,
-                    opponentChoice: NUMBER_TO_MOVE[gameState.c2],
+                    playerChoice: userMove,
+                    opponentChoice: j2Move,
                 }
             );
 
@@ -160,6 +162,7 @@ export function useRevealMove({
                 status: 'completed',
                 type: j2Result,
                 completedAt,
+                playerChoice: j2Move,
                 opponentChoice: userMove,
             });
 

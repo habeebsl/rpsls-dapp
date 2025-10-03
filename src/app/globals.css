@@ -25,3 +25,25 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
+
+/* Slide-up animation for mobile action buttons */
+@keyframes slide-up {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.animate-slide-up {
+    animation: slide-up 0.3s ease-out forwards;
+    transform: translateY(0);
+}
+
+/* Safe area padding for iOS devices */
+.pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+}

@@ -19,29 +19,101 @@ export function GameActionButtons({
   onRevealMove,
   onTimeout,
 }: GameActionButtonsProps) {
+  // TEMPORARY: Force show buttons for testing mobile layout
+  const TESTING_MODE = true; // Set to true to always show buttons
+
+  // Check if any button should be shown
+  const showRevealButton = TESTING_MODE || (isCurrentUserJ1 && !gameHasEnded);
+  const showTimeoutButton = TESTING_MODE || !gameHasEnded;
+  const shouldShowBar = showRevealButton || showTimeoutButton;
+
+  // Check if buttons are actually enabled (not just visible)
+  const isRevealEnabled = j2HasPlayed && !gameHasEnded;
+  const isTimeoutEnabled = timeoutEnabled && !gameHasEnded;
+
+  if (!shouldShowBar) return null;
+
   return (
-    <div className="absolute top-30 right-10 z-10 flex flex-col gap-8">
-      {/* Reveal Move Button - Only show for J1 */}
-      {isCurrentUserJ1 && (
-        <PrimaryButton
-          text="Reveal Move"
-          backgroundColor={j2HasPlayed && !gameHasEnded ? "bg-blue-500" : "bg-gray-400"}
-          hoverBackgroundColor={j2HasPlayed && !gameHasEnded ? "hover:bg-blue-600" : "hover:bg-gray-400"}
-          shadowColor={j2HasPlayed && !gameHasEnded ? "bg-blue-700" : "bg-gray-500"}
-          className={`text-sm font-medium ${j2HasPlayed && !gameHasEnded ? "" : "cursor-not-allowed"}`}
-          onClick={j2HasPlayed && !gameHasEnded ? onRevealMove : undefined}
-        />
-      )}
-      
-      <PrimaryButton
-        text="Call Opponent Timeout"
-        height={45}
-        backgroundColor={timeoutEnabled && !gameHasEnded ? "bg-red-500" : "bg-gray-400"}
-        hoverBackgroundColor={timeoutEnabled && !gameHasEnded ? "hover:bg-red-600" : "hover:bg-gray-400"}
-        shadowColor={timeoutEnabled && !gameHasEnded ? "bg-red-700" : "bg-gray-500"}
-        className={`text-sm font-medium ${timeoutEnabled && !gameHasEnded ? "" : "cursor-not-allowed"}`}
-        onClick={timeoutEnabled && !gameHasEnded ? onTimeout : undefined}
-      />
-    </div>
+    <>
+      {/* Desktop: Floating buttons on right side */}
+      <div className="hidden md:flex md:absolute md:top-30 md:right-10 md:z-10 md:flex-col md:gap-8">
+        {/* Reveal Move Button - Only show for J1 */}
+        {showRevealButton && (
+          <PrimaryButton
+            text="Reveal Move"
+            backgroundColor={isRevealEnabled ? 'bg-blue-500' : 'bg-gray-400'}
+            hoverBackgroundColor={
+              isRevealEnabled ? 'hover:bg-blue-600' : 'hover:bg-gray-400'
+            }
+            shadowColor={isRevealEnabled ? 'bg-blue-700' : 'bg-gray-500'}
+            className={`text-sm font-medium ${isRevealEnabled ? '' : 'cursor-not-allowed'}`}
+            onClick={isRevealEnabled ? onRevealMove : undefined}
+          />
+        )}
+
+        {showTimeoutButton && (
+          <PrimaryButton
+            text="Call Opponent Timeout"
+            height={45}
+            backgroundColor={isTimeoutEnabled ? 'bg-red-500' : 'bg-gray-400'}
+            hoverBackgroundColor={
+              isTimeoutEnabled ? 'hover:bg-red-600' : 'hover:bg-gray-400'
+            }
+            shadowColor={isTimeoutEnabled ? 'bg-red-700' : 'bg-gray-500'}
+            className={`text-sm font-medium ${isTimeoutEnabled ? '' : 'cursor-not-allowed'}`}
+            onClick={isTimeoutEnabled ? onTimeout : undefined}
+          />
+        )}
+      </div>
+
+      {/* Mobile: Fixed bottom bar */}
+      <div
+        className="
+        md:hidden
+        fixed bottom-0 left-0 right-0 z-50
+        px-4 pt-4 pb-4
+        bg-gray-100
+        border-t-2 border-gray-300
+      "
+      >
+        <div
+          className={`
+          flex gap-3 max-w-md mx-auto
+          ${showRevealButton && showTimeoutButton ? 'flex-col min-[400px]:flex-row' : 'flex-col'}
+        `}
+        >
+          {/* Reveal Move Button - Only show for J1 */}
+          {showRevealButton && (
+            <PrimaryButton
+              text="Reveal Move"
+              height={45}
+              width={undefined}
+              backgroundColor={isRevealEnabled ? 'bg-blue-500' : 'bg-gray-400'}
+              hoverBackgroundColor={
+                isRevealEnabled ? 'hover:bg-blue-600' : 'hover:bg-gray-400'
+              }
+              shadowColor={isRevealEnabled ? 'bg-blue-700' : 'bg-gray-500'}
+              className={`text-sm font-medium flex-1 w-full ${isRevealEnabled ? '' : 'cursor-not-allowed'}`}
+              onClick={isRevealEnabled ? onRevealMove : undefined}
+            />
+          )}
+
+          {showTimeoutButton && (
+            <PrimaryButton
+              text="Call Opponent Timeout"
+              height={45}
+              width={undefined}
+              backgroundColor={isTimeoutEnabled ? 'bg-red-500' : 'bg-gray-400'}
+              hoverBackgroundColor={
+                isTimeoutEnabled ? 'hover:bg-red-600' : 'hover:bg-gray-400'
+              }
+              shadowColor={isTimeoutEnabled ? 'bg-red-700' : 'bg-gray-500'}
+              className={`text-sm font-medium flex-1 w-full ${isTimeoutEnabled ? '' : 'cursor-not-allowed'}`}
+              onClick={isTimeoutEnabled ? onTimeout : undefined}
+            />
+          )}
+        </div>
+      </div>
+    </>
   );
 }

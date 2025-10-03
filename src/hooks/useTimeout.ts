@@ -3,6 +3,7 @@ import { gameApi } from '@/services/api';
 import { notificationHelpers } from '@/utils/notifications';
 import { GameState } from '@/types';
 import { ethers, Signer } from 'ethers';
+import { NUMBER_TO_MOVE } from '@/types';
 
 interface UseTimeoutProps {
     contractAddress: string;
@@ -64,6 +65,31 @@ export function useTimeout({
 
             const completedAt = new Date().toISOString();
 
+            // Get player moves if available
+            let currentUserMove: string | undefined;
+            let opponentMove: string | undefined;
+
+            // Try to get current user's move from Redis
+            try {
+                const moveResponse = await gameApi.getUserMove(
+                    contractAddress,
+                    currentUserAddress
+                );
+                if (moveResponse && moveResponse.move) {
+                    currentUserMove = moveResponse.move;
+                }
+            } catch (error) {
+                // Move not found is okay, might not have been made yet
+                console.log(
+                    'Current user move not found (expected for J1 timeout)'
+                );
+            }
+
+            // Get opponent's move if J2 has played (visible on blockchain)
+            if (gameState.hasPlayer2Played && gameState.c2) {
+                opponentMove = NUMBER_TO_MOVE[Number(gameState.c2)];
+            }
+
             // Update game result for the winner (current user who called timeout)
             await gameApi.updateGameResult(
                 contractAddress,
@@ -72,7 +98,8 @@ export function useTimeout({
                     status: 'completed',
                     type: 'win',
                     completedAt,
-                    timeoutWinner: isCurrentUserJ1 ? 'j1' : 'j2', // Add timeoutWinner field
+                    ...(currentUserMove && { playerChoice: currentUserMove }),
+                    ...(opponentMove && { opponentChoice: opponentMove }),
                 }
             );
 
@@ -84,7 +111,8 @@ export function useTimeout({
                 status: 'timeout',
                 type: 'loss',
                 completedAt,
-                timeoutWinner: isCurrentUserJ1 ? 'j1' : 'j2', // Add timeoutWinner field
+                ...(opponentMove && { playerChoice: opponentMove }),
+                ...(currentUserMove && { opponentChoice: currentUserMove }),
             });
 
             // Send timeout notification to the loser

@@ -58,34 +58,37 @@ export function GameCreationModal({ isOpen, onClose }: GameCreationModalProps) {
 
   // Trigger validation when address changes
   useEffect(() => {
-    if (opponentAddress) {
-      // Check for self-play first
-      if (isSelfPlay) {
-        setAddressValidation({
-          isValid: false,
-          isChecking: false,
-          exists: null,
-        });
-        return;
-      }
-
-      // Set checking state immediately (no flash of error)
-      setAddressValidation({ isValid: false, isChecking: true, exists: null });
-
-      const timeoutId = setTimeout(async () => {
-        const result = await validateSepoliaAddress(opponentAddress);
-        setAddressValidation(result);
-      }, 500); // Debounce for 500ms
-
-      return () => clearTimeout(timeoutId);
-    } else {
+    // Don't show validation errors if field is empty
+    if (!opponentAddress) {
       setAddressValidation({ isValid: false, isChecking: false, exists: null });
+      return;
     }
+
+    // Check for self-play first
+    if (isSelfPlay) {
+      setAddressValidation({
+        isValid: false,
+        isChecking: false,
+        exists: null,
+      });
+      return;
+    }
+
+    // Set checking state immediately (no flash of error)
+    setAddressValidation({ isValid: false, isChecking: true, exists: null });
+
+    const timeoutId = setTimeout(async () => {
+      const result = await validateSepoliaAddress(opponentAddress);
+      setAddressValidation(result);
+    }, 500); // Debounce for 500ms
+
+    return () => clearTimeout(timeoutId);
   }, [opponentAddress, isSelfPlay]);
 
   // Form validation
   const isFormValid =
     stake &&
+    parseFloat(stake) > 0 && // Stake must be greater than 0
     opponentAddress &&
     selectedMove &&
     addressValidation.isValid &&
@@ -94,10 +97,10 @@ export function GameCreationModal({ isOpen, onClose }: GameCreationModalProps) {
 
   const handleStartGame = async () => {
     if (!isFormValid || !userAddress || !signer) return;
-    
+
     setIsCreating(true);
     setError(null);
-    
+
     try {
       console.log('Starting game with:', {
         stake,
@@ -129,37 +132,40 @@ export function GameCreationModal({ isOpen, onClose }: GameCreationModalProps) {
           status: 'pending',
           createdAt: Date.now().toString(),
         },
-        j1Salt: result.salt
+        j1Salt: result.salt,
       };
-      
+
       await gameApi.storeGameResult(requestData);
       console.log('Game data stored in Redis');
 
       // Step 3: Send notification to opponent
       await notificationHelpers.gameRequest(
-        userAddress, 
-        opponentAddress, 
+        userAddress,
+        opponentAddress,
         result.contractAddress
       );
       console.log('Notification sent to opponent');
 
-      // Step 4: Success! Navigate to the game
+      // Step 4: Success! Navigate to the game immediately
       console.log('Game created successfully:', result.contractAddress);
+
+      // Close modal first for instant feedback
       handleClose();
-      
-      // Navigate to the newly created game
-      router.push(`/game/${result.contractAddress}`);
-      
+
+      // Then navigate (replace instead of push for faster transition)
+      router.replace(`/game/${result.contractAddress}`);
     } catch (error) {
       console.error('Error creating game:', error);
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : 'Failed to create game. Please try again.';
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Failed to create game. Please try again.';
       setError(errorMessage);
     } finally {
       setIsCreating(false);
     }
-  };  const handleClose = () => {
+  };
+  const handleClose = () => {
     // Reset form when closing
     setStake('');
     setOpponentAddress('');
@@ -173,21 +179,23 @@ export function GameCreationModal({ isOpen, onClose }: GameCreationModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Background Overlay */}
+      {/* Background Overlay - only clickable when not creating */}
       <div
         className="absolute inset-0 bg-black opacity-30"
-        onClick={handleClose}
+        onClick={!isCreating ? handleClose : undefined}
       ></div>
 
       {/* Modal Container */}
       <div className="relative bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
-        {/* Close Button */}
-        <button
-          onClick={handleClose}
-          className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-full hover:bg-gray-100"
-        >
-          <FontAwesomeIcon icon={faTimes} size="lg" />
-        </button>
+        {/* Close Button - only show when not creating */}
+        {!isCreating && (
+          <button
+            onClick={handleClose}
+            className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-full hover:bg-gray-100"
+          >
+            <FontAwesomeIcon icon={faTimes} size="lg" />
+          </button>
+        )}
 
         {/* Modal Header */}
         <div className="mb-6">
@@ -207,13 +215,22 @@ export function GameCreationModal({ isOpen, onClose }: GameCreationModalProps) {
           <input
             type="number"
             step="0.001"
-            min="0"
+            min="0.001"
             value={stake}
             onChange={e => setStake(e.target.value)}
-            placeholder="0.1"
+            placeholder="0.001"
             className="w-full p-4 rounded-lg border-2 border-gray-300 bg-white text-gray-900 focus:border-purple-500 focus:outline-none transition-colors"
             disabled={isCreating}
           />
+          {stake && parseFloat(stake) <= 0 && (
+            <div className="mt-2 text-sm text-red-600 flex items-center gap-1">
+              <FontAwesomeIcon
+                icon={faExclamationTriangle}
+                className="text-xs"
+              />
+              Stake must be greater than 0
+            </div>
+          )}
         </div>
 
         {/* Opponent Address Input */}
@@ -313,12 +330,13 @@ export function GameCreationModal({ isOpen, onClose }: GameCreationModalProps) {
             {moves.map(move => (
               <button
                 key={move.id}
-                onClick={() => setSelectedMove(move.id as Move)}
+                onClick={() => !isCreating && setSelectedMove(move.id as Move)}
+                disabled={isCreating}
                 className={`relative p-4 rounded-lg border-2 transition-all duration-200 ${
                   selectedMove === move.id
                     ? 'border-blue-500 bg-blue-50 shadow-md'
                     : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                }`}
+                } ${isCreating ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
               >
                 <div className="flex flex-col items-center space-y-2">
                   <FontAwesomeIcon
@@ -355,7 +373,10 @@ export function GameCreationModal({ isOpen, onClose }: GameCreationModalProps) {
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
             <div className="flex items-center gap-2 text-red-700">
-              <FontAwesomeIcon icon={faExclamationTriangle} className="text-sm" />
+              <FontAwesomeIcon
+                icon={faExclamationTriangle}
+                className="text-sm"
+              />
               <span className="text-sm font-medium">{error}</span>
             </div>
           </div>
@@ -364,18 +385,26 @@ export function GameCreationModal({ isOpen, onClose }: GameCreationModalProps) {
         {/* Create Button */}
         <div className="flex justify-center">
           <PrimaryButton
-            text={"Create"}
-            loadingText={"Creating..."}
+            text={'Create'}
+            loadingText={'Creating...'}
             width={200}
             height={50}
-            backgroundColor={isFormValid && !isCreating ? 'bg-blue-500' : 'bg-gray-400'}
-            hoverBackgroundColor={
-              isFormValid && !isCreating ? 'hover:bg-blue-600' : 'hover:bg-gray-400'
+            backgroundColor={
+              isFormValid && !isCreating ? 'bg-blue-500' : 'bg-gray-400'
             }
-            shadowColor={isFormValid && !isCreating ? 'bg-blue-700' : 'bg-gray-600'}
+            hoverBackgroundColor={
+              isFormValid && !isCreating
+                ? 'hover:bg-blue-600'
+                : 'hover:bg-gray-400'
+            }
+            shadowColor={
+              isFormValid && !isCreating ? 'bg-blue-700' : 'bg-gray-600'
+            }
             onClick={isFormValid && !isCreating ? handleStartGame : undefined}
             className={`transition-all duration-200 ${
-              isFormValid && !isCreating ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'
+              isFormValid && !isCreating
+                ? 'cursor-pointer'
+                : 'cursor-not-allowed opacity-60'
             }`}
           />
         </div>

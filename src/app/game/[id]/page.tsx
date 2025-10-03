@@ -310,6 +310,71 @@ export default function GamePage() {
     previousGameHasEnded,
   ]);
 
+  // Effect to check if game has already ended on page load/refresh
+  useEffect(() => {
+    const checkGameAlreadyEnded = async () => {
+      // Only run if game has ended and we haven't already set the result
+      if (!gameHasEnded || !gameState || !currentUserAddress || gameResult) {
+        return;
+      }
+
+      console.log('🔍 Game has already ended, fetching result from API...');
+
+      try {
+        // Fetch the stored game result from API
+        const { gameApi } = await import('@/services/api');
+        const response = await gameApi.getGameResult(
+          contractAddress,
+          currentUserAddress
+        );
+
+        if (
+          response.success &&
+          response.gameResult &&
+          response.gameResult.status === 'completed'
+        ) {
+          console.log('✅ Found completed game result:', response.gameResult);
+
+          // Import calculateGameResult
+          const { calculateGameResult } = await import('@/utils/gameResults');
+
+          // Get J1's move from the API
+          let j1Move: string | null = null;
+
+          if (isCurrentUserJ1) {
+            // Current user is J1, get from their own result
+            j1Move = response.gameResult.playerChoice || null;
+          } else {
+            // Current user is J2, J1's move is the opponent choice
+            j1Move = response.gameResult.opponentChoice || null;
+          }
+
+          if (j1Move) {
+            // Calculate the result
+            const result = calculateGameResult(gameState, j1Move, true);
+
+            if (result) {
+              console.log('🎉 Setting game result from API:', result);
+              setGameResult(result);
+              setShowResultModal(true);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching game result on load:', error);
+      }
+    };
+
+    checkGameAlreadyEnded();
+  }, [
+    gameHasEnded,
+    gameState,
+    currentUserAddress,
+    contractAddress,
+    isCurrentUserJ1,
+    gameResult,
+  ]);
+
   // Helper functions to calculate results for each player
   const getJ1Result = (): 'win' | 'loss' | 'tie' | null => {
     if (!gameHasEnded || !gameResult) return null;
@@ -390,8 +455,8 @@ export default function GamePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 pt-30 relative">
-      <div className="container mx-auto px-4 max-w-4xl">
+    <div className="min-h-screen bg-gray-100 relative">
+      <div className="container mx-auto px-4 max-w-4xl pt-30 pb-28 md:pb-4">
         {/* Game Action Buttons */}
         <GameActionButtons
           isCurrentUserJ1={isCurrentUserJ1}
