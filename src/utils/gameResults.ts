@@ -124,13 +124,22 @@ export function calculateGameResult(
         winningLogic: `J1(${j1Move}/${j1MoveNumber}) vs J2(${NUMBER_TO_MOVE[j2MoveNumber]}/${j2MoveNumber}) = ${absoluteWinner}`,
     });
 
+    // Format stake amount - check if originalStake is already formatted (from Redis)
+    // or if it needs formatting (from blockchain wei value)
+    let formattedStake: string;
+    if (gameState.originalStake) {
+        // If originalStake exists, it's from Redis and already formatted as ETH string
+        formattedStake = gameState.originalStake;
+    } else {
+        // Otherwise format from blockchain wei value
+        formattedStake = ethers.formatEther(gameState.stake || '0');
+    }
+
     return {
         absoluteWinner,
         j1Move: j1Move || 'Unknown',
         j2Move: NUMBER_TO_MOVE[j2MoveNumber] || 'Unknown',
-        stakeAmount: ethers.formatEther(
-            gameState.originalStake || gameState.stake || '0'
-        ),
+        stakeAmount: formattedStake,
         isTimeout: false, // Real-time results are never timeouts
     };
 }

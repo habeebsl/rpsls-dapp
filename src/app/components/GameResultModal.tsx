@@ -15,6 +15,7 @@ interface GameResultModalProps {
   isTimeout?: boolean;
   timeoutWinner?: 'j1' | 'j2';
   isCurrentUserJ1?: boolean;
+  isSpectator?: boolean;
   onClose: () => void;
 }
 
@@ -27,6 +28,7 @@ export function GameResultModal({
   isTimeout = false,
   timeoutWinner,
   isCurrentUserJ1,
+  isSpectator = false,
   onClose,
 }: GameResultModalProps) {
   const router = useRouter();
@@ -43,8 +45,10 @@ export function GameResultModal({
   );
 
   // Get player's move and opponent's move
-  const playerMove = isCurrentUserJ1 ? j1Move : j2Move;
-  const opponentMove = isCurrentUserJ1 ? j2Move : j1Move;
+  // For spectators, always show j1Move as "Player 1" and j2Move as "Player 2"
+  // For players, show based on their perspective
+  const playerMove = isSpectator ? j1Move : isCurrentUserJ1 ? j1Move : j2Move;
+  const opponentMove = isSpectator ? j2Move : isCurrentUserJ1 ? j2Move : j1Move;
 
   // Calculate stake winnings
   const calculateWinnings = (): {
@@ -60,6 +64,26 @@ export function GameResultModal({
       return amount === 0 ? '0' : amount.toString();
     };
 
+    // For spectators, show neutral stake information
+    if (isSpectator) {
+      if (absoluteWinner === 'tie') {
+        return {
+          amount: formatAmount(stake * 2), // Total stake (both players)
+          color: 'text-gray-600',
+          sign: '',
+          label: 'Total Stake',
+        };
+      }
+      // Show winner's earnings
+      return {
+        amount: formatAmount(stake * 2), // Winner gets both stakes
+        color: 'text-blue-600',
+        sign: '',
+        label: `${absoluteWinner === 'j1-wins' ? 'Player 1' : 'Player 2'} Won`,
+      };
+    }
+
+    // For players, show personalized winnings/losses
     if (isTimeout) {
       if (result === 'win') {
         // Winner by timeout
@@ -81,8 +105,18 @@ export function GameResultModal({
           };
         }
       }
-      // Loser by timeout always loses their stake (if they staked)
+      // Loser by timeout - check if they actually staked
       if (result === 'loss') {
+        // If J2 lost by timeout (J1 called timeout), J2 never staked, so they lose nothing
+        if (!isCurrentUserJ1 && timeoutWinner === 'j1') {
+          return {
+            amount: '0',
+            color: 'text-gray-600',
+            sign: '-',
+            label: 'Your Loss',
+          };
+        }
+        // If J1 lost by timeout (J2 called timeout), J1 loses their stake
         return {
           amount: formatAmount(stake),
           color: 'text-red-600',
@@ -124,6 +158,16 @@ export function GameResultModal({
 
   // Get title text
   const getTitleText = (): string => {
+    // Spectator view - show absolute winner
+    if (isSpectator) {
+      if (absoluteWinner === 'tie') return 'They Tied';
+      if (absoluteWinner === 'j1-wins') {
+        return isTimeout ? 'Player 1 Won by Timeout!' : 'Player 1 Won!';
+      }
+      return isTimeout ? 'Player 2 Won by Timeout!' : 'Player 2 Won!';
+    }
+
+    // Player view - show from their perspective
     if (isTimeout) {
       if (result === 'win') return 'You Won by Timeout!';
       if (result === 'loss') return 'You Lost by Timeout';
@@ -136,6 +180,19 @@ export function GameResultModal({
 
   // Get subtitle text
   const getSubtitle = (): string => {
+    // Spectator view - neutral subtitles
+    if (isSpectator) {
+      if (isTimeout) {
+        if (absoluteWinner === 'j1-wins')
+          return 'Player 2 failed to act in time';
+        if (absoluteWinner === 'j2-wins')
+          return 'Player 1 failed to act in time';
+      }
+      if (absoluteWinner === 'tie') return 'Great minds think alike!';
+      return 'Game completed';
+    }
+
+    // Player view - personalized subtitles
     if (isTimeout) {
       if (result === 'win') return 'Your opponent failed to act in time';
       return 'You failed to act in time';
@@ -180,83 +237,125 @@ export function GameResultModal({
           <p className="text-gray-600 text-sm">{getSubtitle()}</p>
         </div>
 
-        {/* Move Battle Display */}
-        {!isTimeout && playerMove && opponentMove && (
-          <div className="mb-6">
-            <div className="flex items-center justify-center gap-4">
-              {/* Your Move */}
-              <div className="flex flex-col items-center">
-                <div
-                  className={`w-12 h-12 rounded-full flex items-center justify-center border-2 mb-2 ${
-                    result === 'win'
+        {/* Move Battle Display - Always show, use ?? for unknown moves */}
+        <div className="mb-6">
+          <div className="flex items-center justify-center gap-4">
+            {/* First Player's Move */}
+            <div className="flex flex-col items-center">
+              <div
+                className={`w-12 h-12 rounded-full flex items-center justify-center border-2 mb-2 ${
+                  isSpectator
+                    ? // Spectator: Color based on absolute winner
+                      absoluteWinner === 'j1-wins'
+                      ? 'bg-green-50 border-green-200'
+                      : absoluteWinner === 'j2-wins'
+                        ? 'bg-red-50 border-red-200'
+                        : 'bg-gray-50 border-gray-200'
+                    : // Player: Color based on their result
+                      result === 'win'
                       ? 'bg-blue-50 border-blue-200'
                       : result === 'loss'
                         ? 'bg-red-50 border-red-200'
                         : 'bg-gray-50 border-gray-200'
-                  }`}
-                >
+                }`}
+              >
+                {playerMove && playerMove !== 'Unknown' ? (
                   <FontAwesomeIcon
                     icon={getMoveIcon(playerMove)}
                     className={`text-lg ${
-                      result === 'win'
-                        ? 'text-blue-600'
-                        : result === 'loss'
-                          ? 'text-red-600'
-                          : 'text-gray-600'
+                      isSpectator
+                        ? // Spectator: Color based on absolute winner
+                          absoluteWinner === 'j1-wins'
+                          ? 'text-green-600'
+                          : absoluteWinner === 'j2-wins'
+                            ? 'text-red-600'
+                            : 'text-gray-600'
+                        : // Player: Color based on their result
+                          result === 'win'
+                          ? 'text-blue-600'
+                          : result === 'loss'
+                            ? 'text-red-600'
+                            : 'text-gray-600'
                     }`}
                   />
-                </div>
-                <span className="text-xs font-medium text-gray-700">You</span>
-                <span className="text-xs text-gray-500">{playerMove}</span>
+                ) : (
+                  <span className="text-2xl text-gray-400">??</span>
+                )}
               </div>
+              <span className="text-xs font-medium text-gray-700">
+                {isSpectator ? 'Player 1' : 'You'}
+              </span>
+              <span className="text-xs text-gray-500">
+                {playerMove && playerMove !== 'Unknown'
+                  ? playerMove
+                  : 'Unknown'}
+              </span>
+            </div>
 
-              {/* VS */}
-              <div className="text-lg font-bold text-gray-400">VS</div>
+            {/* VS */}
+            <div className="text-lg font-bold text-gray-400">VS</div>
 
-              {/* Opponent Move */}
-              <div className="flex flex-col items-center">
-                <div
-                  className={`w-12 h-12 rounded-full flex items-center justify-center border-2 mb-2 ${
-                    result === 'loss'
+            {/* Second Player's Move */}
+            <div className="flex flex-col items-center">
+              <div
+                className={`w-12 h-12 rounded-full flex items-center justify-center border-2 mb-2 ${
+                  isSpectator
+                    ? // Spectator: Color based on absolute winner
+                      absoluteWinner === 'j2-wins'
+                      ? 'bg-green-50 border-green-200'
+                      : absoluteWinner === 'j1-wins'
+                        ? 'bg-red-50 border-red-200'
+                        : 'bg-gray-50 border-gray-200'
+                    : // Player: Color based on their result (inverted)
+                      result === 'loss'
                       ? 'bg-blue-50 border-blue-200'
                       : result === 'win'
                         ? 'bg-red-50 border-red-200'
                         : 'bg-gray-50 border-gray-200'
-                  }`}
-                >
+                }`}
+              >
+                {opponentMove && opponentMove !== 'Unknown' ? (
                   <FontAwesomeIcon
                     icon={getMoveIcon(opponentMove)}
                     className={`text-lg ${
-                      result === 'loss'
-                        ? 'text-blue-600'
-                        : result === 'win'
-                          ? 'text-red-600'
-                          : 'text-gray-600'
+                      isSpectator
+                        ? // Spectator: Color based on absolute winner
+                          absoluteWinner === 'j2-wins'
+                          ? 'text-green-600'
+                          : absoluteWinner === 'j1-wins'
+                            ? 'text-red-600'
+                            : 'text-gray-600'
+                        : // Player: Color based on their result (inverted)
+                          result === 'loss'
+                          ? 'text-blue-600'
+                          : result === 'win'
+                            ? 'text-red-600'
+                            : 'text-gray-600'
                     }`}
                   />
-                </div>
-                <span className="text-xs font-medium text-gray-700">
-                  Opponent
-                </span>
-                <span className="text-xs text-gray-500">{opponentMove}</span>
+                ) : (
+                  <span className="text-2xl text-gray-400">??</span>
+                )}
               </div>
+              <span className="text-xs font-medium text-gray-700">
+                {isSpectator ? 'Player 2' : 'Opponent'}
+              </span>
+              <span className="text-xs text-gray-500">
+                {opponentMove && opponentMove !== 'Unknown'
+                  ? opponentMove
+                  : 'Unknown'}
+              </span>
             </div>
           </div>
-        )}
 
-        {/* Timeout Display */}
-        {isTimeout && (
-          <div className="mb-6 text-center">
-            <div className="w-12 h-12 bg-orange-50 rounded-full flex items-center justify-center border-2 border-orange-200 mx-auto mb-2">
-              <FontAwesomeIcon
-                icon={faStopwatch}
-                size={'xl'}
-                className=" text-orange-600"
-              />
+          {/* Timeout indicator below moves */}
+          {isTimeout && (
+            <div className="mt-4 flex items-center justify-center gap-2">
+              <FontAwesomeIcon icon={faStopwatch} className="text-orange-600" />
+              <p className="text-xs text-gray-600">Game ended due to timeout</p>
             </div>
-            <p className="text-xs text-gray-600">Game ended due to timeout</p>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Winnings */}
         <div className="text-center mb-6">

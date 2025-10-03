@@ -19,12 +19,12 @@ export function GameActionButtons({
   onRevealMove,
   onTimeout,
 }: GameActionButtonsProps) {
-  // TEMPORARY: Force show buttons for testing mobile layout
-  const TESTING_MODE = true; // Set to true to always show buttons
+  // Reveal button: Only J1 can reveal, and only when game hasn't ended
+  const showRevealButton = isCurrentUserJ1 && !gameHasEnded;
 
-  // Check if any button should be shown
-  const showRevealButton = TESTING_MODE || (isCurrentUserJ1 && !gameHasEnded);
-  const showTimeoutButton = TESTING_MODE || !gameHasEnded;
+  // Timeout button: Both players can call timeout when enabled
+  const showTimeoutButton = !gameHasEnded;
+
   const shouldShowBar = showRevealButton || showTimeoutButton;
 
   // Check if buttons are actually enabled (not just visible)

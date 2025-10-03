@@ -137,7 +137,7 @@ export async function j2Timeout(
 
 export async function getGameState(
     contractAddress: string,
-    signer: ethers.Signer
+    signer: ethers.Signer | null
 ) {
     // CRITICAL FIX: Use consistent provider for all users
     // Instead of using signer.provider (which varies per user's MetaMask RPC),
@@ -151,8 +151,10 @@ export async function getGameState(
         consistentProvider // Use consistent provider, not signer
     );
 
-    // Get user address for debugging
-    const userAddress = await signer.getAddress();
+    // Get user address for debugging (if signer is available)
+    const userAddress = signer ? await signer.getAddress() : 'spectator';
+    const userLabel =
+        userAddress === 'spectator' ? 'spectator' : userAddress.slice(0, 8);
 
     // Get block number from consistent provider
     const latestBlock = await consistentProvider.getBlockNumber();
@@ -161,7 +163,7 @@ export async function getGameState(
     const callOptions = { blockTag: 'latest' as const };
 
     console.log(
-        `🔍 Fetching from CONSISTENT provider, block: ${latestBlock}, user: ${userAddress.slice(0, 8)}`
+        `🔍 Fetching from CONSISTENT provider, block: ${latestBlock}, user: ${userLabel}`
     );
 
     const [j1, j2, stake, c2, c1Hash, lastAction] = await Promise.all([
@@ -175,7 +177,7 @@ export async function getGameState(
 
     // Enhanced debugging - log raw blockchain data
     console.log(
-        `🔍 RAW BLOCKCHAIN DATA for ${userAddress.slice(0, 8)} (block ${latestBlock}):`,
+        `🔍 RAW BLOCKCHAIN DATA for ${userLabel} (block ${latestBlock}):`,
         {
             contract: contractAddress.slice(0, 10) + '...',
             j1: j1.slice(0, 8) + '...',

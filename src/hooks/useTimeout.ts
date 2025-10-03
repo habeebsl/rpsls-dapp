@@ -13,6 +13,9 @@ interface UseTimeoutProps {
     isCurrentUserJ1: boolean;
     isCurrentUserJ2: boolean;
     fetchGameState: () => Promise<void>;
+    notifyMove?: (
+        action: 'move_made' | 'game_joined' | 'move_revealed' | 'timeout'
+    ) => Promise<void>;
 }
 
 interface UseTimeoutReturn {
@@ -34,6 +37,7 @@ export function useTimeout({
     isCurrentUserJ1,
     isCurrentUserJ2,
     fetchGameState,
+    notifyMove,
 }: UseTimeoutProps): UseTimeoutReturn {
     const handleTimeoutClick = async () => {
         if (!signer || !gameState || !currentUserAddress) {
@@ -130,17 +134,78 @@ export function useTimeout({
                 'won'
             );
 
+            // Notify real-time listeners that game ended via timeout
+            if (notifyMove) {
+                await notifyMove('timeout');
+                console.log(
+                    '📢 Notified other players of timeout via real-time'
+                );
+            }
+
             // Show timeout result modal
             const timeoutWinner: 'j1' | 'j2' = isCurrentUserJ1 ? 'j1' : 'j2';
             const absoluteWinner: 'j1-wins' | 'j2-wins' = isCurrentUserJ1
                 ? 'j1-wins'
                 : 'j2-wins';
 
+            // Fetch original stake from Redis (since gameState.stake might be 0 after timeout)
+            let originalStake = ethers.formatEther(gameState.stake); // fallback
+            console.log('🔍 DEBUG: Fetching stake from Redis...', {
+                contractAddress,
+                j1Address: gameState.j1,
+                fallbackStakeFromBlockchain: originalStake,
+                gameStateStake: gameState.stake,
+            });
+
+            try {
+                const gameResultResponse = await gameApi.getGameResult(
+                    contractAddress,
+                    gameState.j1 // Get J1's game result which has the original stake
+                );
+                console.log('🔍 DEBUG: Redis response:', {
+                    success: gameResultResponse.success,
+                    hasGameResult: !!gameResultResponse.gameResult,
+                    fullResponse: JSON.stringify(gameResultResponse, null, 2),
+                });
+
+                if (
+                    gameResultResponse.success &&
+                    gameResultResponse.gameResult
+                ) {
+                    const redisStake = gameResultResponse.gameResult.stake;
+                    console.log('🔍 DEBUG: Stake from Redis:', {
+                        redisStake,
+                        redisStakeType: typeof redisStake,
+                        redisStakeLength: redisStake?.length,
+                        willUseThisStake:
+                            redisStake || 'NO - will use fallback',
+                    });
+
+                    originalStake = gameResultResponse.gameResult.stake;
+                    console.log(
+                        '✅ Found original stake from Redis:',
+                        originalStake
+                    );
+                } else {
+                    console.warn(
+                        '❌ Redis response not successful or missing gameResult'
+                    );
+                }
+            } catch (stakeError) {
+                console.warn('💥 Error fetching stake from Redis:', stakeError);
+                console.warn('Using blockchain fallback value:', originalStake);
+            }
+
+            console.log(
+                '🎯 FINAL stake value that will be used:',
+                originalStake
+            );
+
             const timeoutResult = {
                 absoluteWinner,
                 j1Move: 'Unknown', // Timeout: moves not revealed
                 j2Move: 'Unknown', // Timeout: moves not revealed
-                stakeAmount: ethers.formatEther(gameState.stake),
+                stakeAmount: originalStake,
                 isTimeout: true,
                 timeoutWinner,
             };

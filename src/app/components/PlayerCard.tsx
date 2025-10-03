@@ -19,6 +19,7 @@ interface PlayerCardProps {
   currentUserAddress?: string; // To determine if this card represents "You" or "Opponent"
   gameResult?: 'win' | 'loss' | 'tie' | null; // Game result for this player
   gameHasEnded?: boolean; // Whether the game has ended
+  isSpectator?: boolean; // Whether the viewer is a spectator (not a player)
 }
 
 export function PlayerCard({
@@ -29,6 +30,7 @@ export function PlayerCard({
   currentUserAddress,
   gameResult,
   gameHasEnded = false,
+  isSpectator = false,
 }: PlayerCardProps) {
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const [isTimeout, setIsTimeout] = useState(false);
@@ -36,6 +38,8 @@ export function PlayerCard({
   const isCurrentUser =
     currentUserAddress?.toLowerCase() === address.toLowerCase();
   const TIMEOUT_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+  // Note: The timeout button will have a 3-second safety buffer after the countdown
+  // reaches zero to ensure blockchain timing alignment
 
   // Calculate time remaining and timeout status
   useEffect(() => {
@@ -169,7 +173,13 @@ export function PlayerCard({
           {/* Player identifier */}
           <div className="text-center">
             <h3 className="text-white text-base md:text-lg font-bold mb-1">
-              {isCurrentUser ? 'You' : 'Opponent'}
+              {isSpectator
+                ? isJ1
+                  ? 'Player 1'
+                  : 'Player 2'
+                : isCurrentUser
+                  ? 'You'
+                  : 'Opponent'}
             </h3>
             <p className="text-white/80 text-xs font-mono">
               {address.slice(0, 6)}...{address.slice(-4)}

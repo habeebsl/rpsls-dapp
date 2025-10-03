@@ -210,7 +210,7 @@ export function useRevealMove({
                 absoluteWinner: outcome, // 'j1-wins' | 'j2-wins' | 'tie'
                 j1Move: userMove,
                 j2Move: NUMBER_TO_MOVE[gameState.c2],
-                stakeAmount: ethers.formatEther(gameState.stake),
+                stakeAmount: gameResultData.stake, // Use stake from Redis (already formatted)
                 isTimeout: false,
             };
         } catch (error) {

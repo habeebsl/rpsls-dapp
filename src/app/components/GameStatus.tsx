@@ -11,6 +11,7 @@ interface GameStatusProps {
   currentUserAddress?: string;
   j1Result?: 'win' | 'loss' | 'tie' | null;
   j2Result?: 'win' | 'loss' | 'tie' | null;
+  isSpectator?: boolean;
 }
 
 export function GameStatus({
@@ -21,6 +22,7 @@ export function GameStatus({
   currentUserAddress,
   j1Result,
   j2Result,
+  isSpectator = false,
 }: GameStatusProps) {
   return (
     <div className="flex justify-center items-center gap-3 md:gap-8 mb-6 md:mb-8">
@@ -33,6 +35,7 @@ export function GameStatus({
         currentUserAddress={currentUserAddress}
         gameResult={j1Result}
         gameHasEnded={gameHasEnded}
+        isSpectator={isSpectator}
       />
 
       {/* VS Text */}
@@ -47,6 +50,7 @@ export function GameStatus({
         currentUserAddress={currentUserAddress}
         gameResult={j2Result}
         gameHasEnded={gameHasEnded}
+        isSpectator={isSpectator}
       />
     </div>
   );
