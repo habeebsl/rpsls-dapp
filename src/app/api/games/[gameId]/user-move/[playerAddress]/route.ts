@@ -4,6 +4,7 @@ import { getGameState } from '@/lib/contract';
 import { NUMBER_TO_MOVE } from '@/types';
 import { recoverMoveFromNonce } from '@/lib/moves';
 import { createClient } from 'redis';
+import { getConsistentProvider } from '@/lib/provider';
 
 export async function GET(
     request: NextRequest,
@@ -19,10 +20,8 @@ export async function GET(
             );
         }
 
-        // Get game data from contract using Infura RPC
-        const provider = new ethers.JsonRpcProvider(
-            `https://sepolia.infura.io/v3/${process.env.NEXT_PUBLIC_INFURA_API_KEY}`
-        );
+        // Use consistent provider
+        const provider = getConsistentProvider();
 
         // For read-only operations, we can create a dummy signer from the provider
         const wallet = new ethers.Wallet(

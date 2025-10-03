@@ -2,18 +2,15 @@
 
 import { useRouter } from 'next/navigation';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faTimes,
-  faStopwatch
-} from '@fortawesome/free-solid-svg-icons';
+import { faTimes, faStopwatch } from '@fortawesome/free-solid-svg-icons';
 import { PrimaryButton } from './PrimaryButton';
 import { getMoveEmoji, getMoveIcon } from '@/lib/moves';
 
 interface GameResultModalProps {
   isOpen: boolean;
-  result: 'win' | 'loss' | 'tie';
-  playerMove?: string;
-  opponentMove?: string;
+  absoluteWinner: 'j1-wins' | 'j2-wins' | 'tie';
+  j1Move: string;
+  j2Move: string;
   stakeAmount: string; // in ETH (e.g., "0.001")
   isTimeout?: boolean;
   timeoutWinner?: 'j1' | 'j2';
@@ -23,56 +20,104 @@ interface GameResultModalProps {
 
 export function GameResultModal({
   isOpen,
-  result,
-  playerMove,
-  opponentMove,
+  absoluteWinner,
+  j1Move,
+  j2Move,
   stakeAmount,
   isTimeout = false,
   timeoutWinner,
   isCurrentUserJ1,
-  onClose
+  onClose,
 }: GameResultModalProps) {
   const router = useRouter();
-  
+
   if (!isOpen) return null;
 
+  // Calculate result from current user's perspective
+  const { getUserPerspectiveResult } = require('@/utils/gameResults');
+  const result = getUserPerspectiveResult(
+    absoluteWinner,
+    isCurrentUserJ1 || false,
+    isTimeout,
+    timeoutWinner
+  );
+
+  // Get player's move and opponent's move
+  const playerMove = isCurrentUserJ1 ? j1Move : j2Move;
+  const opponentMove = isCurrentUserJ1 ? j2Move : j1Move;
+
   // Calculate stake winnings
-  const calculateWinnings = (): { amount: string; color: string; sign: string; label: string } => {
+  const calculateWinnings = (): {
+    amount: string;
+    color: string;
+    sign: string;
+    label: string;
+  } => {
     const stake = parseFloat(stakeAmount);
-    
+
     // Format amount to remove unnecessary trailing zeros
     const formatAmount = (amount: number): string => {
       return amount === 0 ? '0' : amount.toString();
     };
-    
+
     if (isTimeout) {
       if (result === 'win') {
         // Winner by timeout
         if (isCurrentUserJ1 && timeoutWinner === 'j1') {
           // J1 wins by J2 timeout - J1 gets nothing (J2 never staked)
-          return { amount: '0', color: 'text-gray-600', sign: '+', label: 'Your Winnings' };
+          return {
+            amount: '0',
+            color: 'text-gray-600',
+            sign: '+',
+            label: 'Your Winnings',
+          };
         } else if (!isCurrentUserJ1 && timeoutWinner === 'j2') {
           // J2 wins by J1 timeout - J2 gets J1's stake
-          return { amount: formatAmount(stake), color: 'text-green-600', sign: '+', label: 'Your Winnings' };
+          return {
+            amount: formatAmount(stake),
+            color: 'text-green-600',
+            sign: '+',
+            label: 'Your Winnings',
+          };
         }
       }
       // Loser by timeout always loses their stake (if they staked)
       if (result === 'loss') {
-        return { amount: formatAmount(stake), color: 'text-red-600', sign: '-', label: 'Your Loss' };
+        return {
+          amount: formatAmount(stake),
+          color: 'text-red-600',
+          sign: '-',
+          label: 'Your Loss',
+        };
       }
     } else {
       // Regular game results
       if (result === 'win') {
         // Winner gets opponent's stake (net gain)
-        return { amount: formatAmount(stake), color: 'text-green-600', sign: '+', label: 'Your Winnings' };
+        return {
+          amount: formatAmount(stake),
+          color: 'text-green-600',
+          sign: '+',
+          label: 'Your Winnings',
+        };
       } else if (result === 'loss') {
         // Loser loses their stake
-        return { amount: formatAmount(stake), color: 'text-red-600', sign: '-', label: 'Your Loss' };
+        return {
+          amount: formatAmount(stake),
+          color: 'text-red-600',
+          sign: '-',
+          label: 'Your Loss',
+        };
       }
     }
-    
+
     // Tie - no money changes hands
-    return { amount: '0', color: 'text-gray-600', sign: '+', label: 'Your Winnings' };
+    return {
+      amount: '0',
+      color: 'text-gray-600',
+      sign: '+',
+      label: 'Your Winnings',
+    };
   };
 
   const winnings = calculateWinnings();
@@ -83,7 +128,7 @@ export function GameResultModal({
       if (result === 'win') return 'You Won by Timeout!';
       if (result === 'loss') return 'You Lost by Timeout';
     }
-    
+
     if (result === 'win') return 'You Won!';
     if (result === 'loss') return 'You Lost';
     return 'You Tied';
@@ -115,11 +160,8 @@ export function GameResultModal({
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
       {/* Background Overlay */}
-      <div 
-        className="absolute inset-0 bg-black opacity-30"
-        onClick={onClose}
-      />
-      
+      <div className="absolute inset-0 bg-black opacity-30" onClick={onClose} />
+
       {/* Modal Content - Much smaller and cleaner */}
       <div className="relative bg-white rounded-2xl shadow-2xl max-w-sm w-full mx-4 p-6">
         {/* Close Button */}
@@ -135,9 +177,7 @@ export function GameResultModal({
           <h2 className={`text-2xl font-bold mb-2 ${getTitleColor()}`}>
             {getTitleText()}
           </h2>
-          <p className="text-gray-600 text-sm">
-            {getSubtitle()}
-          </p>
+          <p className="text-gray-600 text-sm">{getSubtitle()}</p>
         </div>
 
         {/* Move Battle Display */}
@@ -146,21 +186,23 @@ export function GameResultModal({
             <div className="flex items-center justify-center gap-4">
               {/* Your Move */}
               <div className="flex flex-col items-center">
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 mb-2 ${
-                  result === 'win' 
-                    ? 'bg-blue-50 border-blue-200' 
-                    : result === 'loss' 
-                    ? 'bg-red-50 border-red-200' 
-                    : 'bg-gray-50 border-gray-200'
-                }`}>
-                  <FontAwesomeIcon 
-                    icon={getMoveIcon(playerMove)} 
+                <div
+                  className={`w-12 h-12 rounded-full flex items-center justify-center border-2 mb-2 ${
+                    result === 'win'
+                      ? 'bg-blue-50 border-blue-200'
+                      : result === 'loss'
+                        ? 'bg-red-50 border-red-200'
+                        : 'bg-gray-50 border-gray-200'
+                  }`}
+                >
+                  <FontAwesomeIcon
+                    icon={getMoveIcon(playerMove)}
                     className={`text-lg ${
-                      result === 'win' 
-                        ? 'text-blue-600' 
-                        : result === 'loss' 
-                        ? 'text-red-600' 
-                        : 'text-gray-600'
+                      result === 'win'
+                        ? 'text-blue-600'
+                        : result === 'loss'
+                          ? 'text-red-600'
+                          : 'text-gray-600'
                     }`}
                   />
                 </div>
@@ -173,25 +215,29 @@ export function GameResultModal({
 
               {/* Opponent Move */}
               <div className="flex flex-col items-center">
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 mb-2 ${
-                  result === 'loss' 
-                    ? 'bg-blue-50 border-blue-200' 
-                    : result === 'win' 
-                    ? 'bg-red-50 border-red-200' 
-                    : 'bg-gray-50 border-gray-200'
-                }`}>
-                  <FontAwesomeIcon 
-                    icon={getMoveIcon(opponentMove)} 
+                <div
+                  className={`w-12 h-12 rounded-full flex items-center justify-center border-2 mb-2 ${
+                    result === 'loss'
+                      ? 'bg-blue-50 border-blue-200'
+                      : result === 'win'
+                        ? 'bg-red-50 border-red-200'
+                        : 'bg-gray-50 border-gray-200'
+                  }`}
+                >
+                  <FontAwesomeIcon
+                    icon={getMoveIcon(opponentMove)}
                     className={`text-lg ${
-                      result === 'loss' 
-                        ? 'text-blue-600' 
-                        : result === 'win' 
-                        ? 'text-red-600' 
-                        : 'text-gray-600'
+                      result === 'loss'
+                        ? 'text-blue-600'
+                        : result === 'win'
+                          ? 'text-red-600'
+                          : 'text-gray-600'
                     }`}
                   />
                 </div>
-                <span className="text-xs font-medium text-gray-700">Opponent</span>
+                <span className="text-xs font-medium text-gray-700">
+                  Opponent
+                </span>
                 <span className="text-xs text-gray-500">{opponentMove}</span>
               </div>
             </div>
@@ -202,7 +248,11 @@ export function GameResultModal({
         {isTimeout && (
           <div className="mb-6 text-center">
             <div className="w-12 h-12 bg-orange-50 rounded-full flex items-center justify-center border-2 border-orange-200 mx-auto mb-2">
-              <FontAwesomeIcon icon={faStopwatch} size={"xl"} className=" text-orange-600" />
+              <FontAwesomeIcon
+                icon={faStopwatch}
+                size={'xl'}
+                className=" text-orange-600"
+              />
             </div>
             <p className="text-xs text-gray-600">Game ended due to timeout</p>
           </div>
@@ -212,13 +262,17 @@ export function GameResultModal({
         <div className="text-center mb-6">
           <div className="text-sm text-gray-500 mb-1">{winnings.label}</div>
           <div className={`text-2xl font-bold ${winnings.color}`}>
-            {winnings.sign}{winnings.amount} ETH
+            {winnings.sign}
+            {winnings.amount} ETH
           </div>
-          {isTimeout && result === 'win' && isCurrentUserJ1 && timeoutWinner === 'j1' && (
-            <div className="text-xs text-gray-500 mt-1">
-              Opponent never staked
-            </div>
-          )}
+          {isTimeout &&
+            result === 'win' &&
+            isCurrentUserJ1 &&
+            timeoutWinner === 'j1' && (
+              <div className="text-xs text-gray-500 mt-1">
+                Opponent never staked
+              </div>
+            )}
         </div>
 
         {/* Action Button */}
