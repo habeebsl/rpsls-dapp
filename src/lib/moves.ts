@@ -1,14 +1,5 @@
 import { ethers } from 'ethers';
 import { Move, MOVE_TO_NUMBER } from '@/types';
-import {
-    faHandRock,
-    faHandPaper,
-    faHandScissors,
-    faHandLizard,
-    faHandSpock,
-    faQuestion,
-} from '@fortawesome/free-solid-svg-icons';
-import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 /**
  * Generate a commitment hash for J1's move
  * @param move The move to commit
@@ -105,22 +96,19 @@ export function generateNonce(): string {
 /**
  * Get FontAwesome icon for a move
  * @param move The move to get icon for
- * @returns FontAwesome icon
+ * @returns FontAwesome icon or null if no icon available
  */
-export function getMoveIcon(move: string): IconDefinition {
+export function getMoveIcon(move: string) {
+    // Import icons dynamically to avoid circular dependencies
+    const { faHandRock, faHandPaper, faHandScissors, faHandLizard, faHandSpock } = require('@fortawesome/free-solid-svg-icons');
+
     switch (move) {
-        case 'Rock':
-            return faHandRock;
-        case 'Paper':
-            return faHandPaper;
-        case 'Scissors':
-            return faHandScissors;
-        case 'Lizard':
-            return faHandLizard;
-        case 'Spock':
-            return faHandSpock;
-        default:
-            return faQuestion;
+        case 'Rock': return faHandRock;
+        case 'Paper': return faHandPaper;
+        case 'Scissors': return faHandScissors;
+        case 'Lizard': return faHandLizard;
+        case 'Spock': return faHandSpock;
+        default: return null;
     }
 }
 
@@ -131,17 +119,11 @@ export function getMoveIcon(move: string): IconDefinition {
  */
 export function getMoveEmoji(move: string): string {
     switch (move) {
-        case 'Rock':
-            return '🪨';
-        case 'Paper':
-            return '📄';
-        case 'Scissors':
-            return '✂️';
-        case 'Lizard':
-            return '🦎';
-        case 'Spock':
-            return '🖖';
-        default:
-            return '❓';
+        case 'Rock': return '🪨';
+        case 'Paper': return '📄';
+        case 'Scissors': return '✂️';
+        case 'Lizard': return '🦎';
+        case 'Spock': return '🖖';
+        default: return '❓';
     }
 }

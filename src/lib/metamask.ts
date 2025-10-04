@@ -1,12 +1,46 @@
 import { MetaMaskSDK } from '@metamask/sdk';
-import { ethers, Eip1193Provider } from 'ethers';
+import { ethers } from 'ethers';
 
-export async function connectWallet(): Promise<Eip1193Provider> {
+let MMSDK: MetaMaskSDK | null = null;
+
+// Initialize MetaMask SDK for mobile support
+function initializeSDK() {
+    if (typeof window === 'undefined') return null;
+
+    // Don't initialize if already done or if MetaMask extension is present
+    if (MMSDK) return MMSDK;
+
+    // Check if MetaMask extension is already available (desktop)
+    if ((window as any).ethereum?.isMetaMask) {
+        console.log('MetaMask extension detected, skipping SDK initialization');
+        return null;
+    }
+
+    // Initialize SDK for mobile browsers
+    console.log('Initializing MetaMask SDK for mobile support...');
+    MMSDK = new MetaMaskSDK({
+        dappMetadata: {
+            name: 'RPSLS dApp',
+            url: typeof window !== 'undefined' ? window.location.origin : '',
+        },
+        // Logging for debugging (remove in production)
+        logging: {
+            developerMode: false,
+        },
+    });
+
+    return MMSDK;
+}
+
+export async function connectWallet() {
+    // Initialize SDK first (for mobile)
+    initializeSDK();
+
     // Wait for provider to be available
     const ethereum = await waitForProvider();
     if (!ethereum) {
         throw new Error(
-            'MetaMask not detected. Please install MetaMask extension.'
+            'MetaMask not detected. Please install MetaMask extension or mobile app.'
         );
     }
 
@@ -15,24 +49,33 @@ export async function connectWallet(): Promise<Eip1193Provider> {
 }
 
 // Wait for MetaMask provider to be available
-async function waitForProvider(
-    maxAttempts = 10,
-    delay = 200
-): Promise<Eip1193Provider | null> {
+async function waitForProvider(maxAttempts = 10, delay = 200): Promise<any> {
     return new Promise(resolve => {
         let attempts = 0;
 
         const checkProvider = () => {
             attempts++;
 
-            // Check if MetaMask is available
+            // Check if MetaMask extension is available (desktop)
             if (typeof window !== 'undefined' && (window as any).ethereum) {
+                console.log('MetaMask provider found');
                 resolve((window as any).ethereum);
                 return;
             }
 
+            // Check if SDK initialized and has provider (mobile)
+            if (MMSDK) {
+                const sdkProvider = MMSDK.getProvider();
+                if (sdkProvider) {
+                    console.log('MetaMask SDK provider found (mobile)');
+                    resolve(sdkProvider);
+                    return;
+                }
+            }
+
             // If we've reached max attempts, resolve with null
             if (attempts >= maxAttempts) {
+                console.log('MetaMask provider not found after max attempts');
                 resolve(null);
                 return;
             }
@@ -46,6 +89,9 @@ async function waitForProvider(
 }
 
 export async function checkExistingConnection() {
+    // Initialize SDK first (for mobile)
+    initializeSDK();
+
     const ethereum = await waitForProvider();
     if (!ethereum) {
         console.log('MetaMask not detected');
@@ -79,9 +125,9 @@ export async function switchToSepolia() {
             params: [{ chainId: '0xaa36a7' }], // Sepolia chain ID
         });
         return true;
-    } catch (error: unknown) {
+    } catch (error: any) {
         // Chain not added, try to add it
-        if ((error as any).code === 4902) {
+        if (error.code === 4902) {
             try {
                 await ethereum.request({
                     method: 'wallet_addEthereumChain',

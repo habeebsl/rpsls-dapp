@@ -20,18 +20,6 @@ const eslintConfig = [
             'next-env.d.ts',
         ],
     },
-    {
-        rules: {
-            // Allow 'any' type in specific cases - turn error into warning
-            '@typescript-eslint/no-explicit-any': 'warn',
-
-            // Allow unused vars - turn error into warning
-            '@typescript-eslint/no-unused-vars': 'warn',
-
-            // These are just warnings, not blocking
-            'react-hooks/exhaustive-deps': 'warn',
-        },
-    },
 ];
 
 export default eslintConfig;

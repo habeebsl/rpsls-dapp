@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import LoggedInContainer from './LoggedInContainer';
@@ -15,7 +15,7 @@ import { PrimaryButton } from './PrimaryButton';
 import { GameCreationModal } from './GameCreationModal';
 
 export function NavBar() {
-  const { isConnected, address } = useWalletStore();
+  const { isConnected, address, connect, checkConnection } = useWalletStore();
   const pathname = usePathname();
   const [isGameModalOpen, setIsGameModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -23,8 +23,10 @@ export function NavBar() {
   // Check if we're on a game page
   const isGamePage = pathname?.startsWith('/game/');
 
-  // Note: Wallet connection checking is now handled by WalletSync component
-  // No need to call checkConnection() here anymore
+  // Check wallet connection on component mount only
+  useEffect(() => {
+    checkConnection();
+  }, []);
 
   return (
     <div>
@@ -76,17 +78,18 @@ export function NavBar() {
         <div className="flex items-center gap-3">
           {/* Mobile: Connection Status Badge - Hidden on desktop */}
           <div className="md:hidden">
-            <ConnectionStatusBadge />
+            <ConnectionStatusBadge onConnect={connect} />
           </div>
 
           {/* Notification Bell - Always visible */}
           <NotificationBell />
 
           {/* Desktop: Full connection display */}
-          <div className="hidden md:flex items-center">
+          <div className="hidden md:block">
             <LoggedInContainer
               isConnected={isConnected}
-              userAddress={address ?? undefined}
+              userAddress={address || undefined}
+              onConnect={connect}
             />
           </div>
 

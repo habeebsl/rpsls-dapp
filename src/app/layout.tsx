@@ -5,8 +5,6 @@ import '@/lib/fontawesome'; // Initialize Font Awesome
 import { NavBar } from './components/Navbar';
 import { GlobalConfirmationModal } from './components/GlobalConfirmationModal';
 import { NotificationProvider } from './components/NotificationProvider';
-import { Web3ModalProvider } from './components/Web3ModalProvider';
-import { ErudaLoader } from './components/ErudaLoader';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -27,13 +25,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} antialiased`}>
-        <ErudaLoader />
-        <Web3ModalProvider>
-          <NavBar />
-          <NotificationProvider />
-          <main>{children}</main>
-          <GlobalConfirmationModal />
-        </Web3ModalProvider>
+        <NavBar />
+        <NotificationProvider />
+        <main>{children}</main>
+        <GlobalConfirmationModal />
       </body>
     </html>
   );

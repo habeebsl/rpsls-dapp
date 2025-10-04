@@ -98,27 +98,23 @@ export function useGameState({
                     } else {
                         console.log('❌ No move found in response');
                     }
-                } catch (moveError: unknown) {
-                    const error = moveError as {
-                        response?: { status?: number };
-                        message?: string;
-                    };
+                } catch (moveError: any) {
                     console.log(
                         '⚠️ getUserMove API call failed or returned 404:',
                         {
-                            status: error.response?.status,
-                            message: error.message,
+                            status: moveError.response?.status,
+                            message: moveError.message,
                             contractAddress,
                             userAddress: currentUserAddress,
                         }
                     );
                     // 404 is expected if player hasn't made a move yet - ignore it
-                    if (error.response?.status !== 404) {
+                    if (moveError.response?.status !== 404) {
                         console.warn(
                             'Error fetching user move (non-critical):',
                             {
-                                status: error.response?.status,
-                                message: error.message,
+                                status: moveError.response?.status,
+                                message: moveError.message,
                                 contractAddress,
                                 userAddress: currentUserAddress,
                             }

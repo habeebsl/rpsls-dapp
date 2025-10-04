@@ -5,7 +5,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes, faStopwatch } from '@fortawesome/free-solid-svg-icons';
 import { PrimaryButton } from './PrimaryButton';
 import { getMoveEmoji, getMoveIcon } from '@/lib/moves';
-import { getUserPerspectiveResult } from '@/utils/gameResults';
 
 interface GameResultModalProps {
   isOpen: boolean;
@@ -37,6 +36,7 @@ export function GameResultModal({
   if (!isOpen) return null;
 
   // Calculate result from current user's perspective
+  const { getUserPerspectiveResult } = require('@/utils/gameResults');
   const result = getUserPerspectiveResult(
     absoluteWinner,
     isCurrentUserJ1 || false,

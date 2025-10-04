@@ -2,14 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { faWallet, faTrophy } from '@fortawesome/free-solid-svg-icons';
+import { useNotificationStore } from '@/stores/notificationStore';
 import { useWalletStore } from '@/stores/walletStore';
-import { useAppKit } from '@reown/appkit/react';
 import { PrimaryButton } from '@/app/components/PrimaryButton';
 import { LoadingScreen } from '@/app/components/LoadingScreen';
 import { GameCreationModal } from '@/app/components/GameCreationModal';
 export default function Home() {
-  const { isConnected, address, isLoading } = useWalletStore();
-  const { open } = useAppKit();
+  const { isConnected, address, connect, isLoading } = useWalletStore();
 
   // Real wins data from Redis
   const [userWins, setUserWins] = useState(0);
@@ -142,9 +141,7 @@ export default function Home() {
                 backgroundColor="bg-black"
                 hoverBackgroundColor="hover:bg-gray-600"
                 shadowColor="bg-gray-700"
-                onClick={async () => {
-                  await open();
-                }}
+                onClick={connect}
               />
             ) : (
               <PrimaryButton

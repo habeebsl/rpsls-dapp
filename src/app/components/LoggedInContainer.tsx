@@ -1,17 +1,19 @@
 'use client';
 
 import StatusIndicator from './StatusIndicator';
-import { MultiWalletConnect } from './MultiWalletConnect';
+import ConnectButton from './ConnectButton';
 import LoadingSpinner from './LoadingSpinner';
 
 interface LoggedInContainerProps {
   isConnected: boolean | null; // null = loading, true = connected, false = not connected
   userAddress?: string;
+  onConnect: () => void;
 }
 
 export default function LoggedInContainer({
   isConnected,
   userAddress,
+  onConnect,
 }: LoggedInContainerProps) {
   // Loading state
   if (isConnected === null) {
@@ -43,7 +45,7 @@ export default function LoggedInContainer({
     <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-red-100 bg-opacity-50 border border-red-200">
       <StatusIndicator isConnected={false} />
       <span className="text-red-800 font-medium">Not Connected</span>
-      <MultiWalletConnect />
+      <ConnectButton onClick={onConnect} />
     </div>
   );
 }

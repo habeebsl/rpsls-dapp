@@ -25,7 +25,7 @@ export function NotificationBell() {
     markAllAsRead,
     removeNotification,
   } = useNotificationStore();
-  
+
   const { address } = useWalletStore();
   const router = useRouter();
 
@@ -51,7 +51,11 @@ export function NotificationBell() {
     };
   }, [isOpen, setOpen]);
 
-  const handleAcceptGame = async (notificationId: string, gameId: string, fromPlayer: string) => {
+  const handleAcceptGame = async (
+    notificationId: string,
+    gameId: string,
+    fromPlayer: string
+  ) => {
     try {
       // Check if notification is already read before marking
       const notification = notifications.find(n => n.id === notificationId);
@@ -102,11 +106,11 @@ export function NotificationBell() {
 
   const handleMarkAllAsRead = async () => {
     if (!address) return;
-    
+
     try {
       // Only mark unread notifications as read
       const unreadNotifications = notifications.filter(n => !n.read);
-      
+
       // Mark each unread notification as read
       for (const notification of unreadNotifications) {
         await markAsRead(notification.id, address);
@@ -120,12 +124,12 @@ export function NotificationBell() {
     try {
       // Find the notification to check if it's unread
       const notification = notifications.find(n => n.id === notificationId);
-      
+
       // If it's unread, mark it as read first to keep count accurate
       if (address && notification && !notification.read) {
         await markAsRead(notificationId, address);
       }
-      
+
       // Then remove it from local state
       removeNotification(notificationId);
     } catch (error) {
@@ -170,7 +174,7 @@ export function NotificationBell() {
 
       {/* Dropdown Panel */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-hidden">
+        <div className="fixed sm:absolute mt-2 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-hidden w-[calc(100vw-2rem)] max-w-sm sm:w-80 left-1/2 -translate-x-1/2 sm:left-auto sm:right-0 sm:translate-x-0 top-16 sm:top-auto">
           {/* Header */}
           <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
             <h3 className="text-lg font-semibold text-gray-900">
@@ -270,7 +274,9 @@ export function NotificationBell() {
                     <div className="flex items-center gap-1 ml-2">
                       {!notification.read && (
                         <button
-                          onClick={() => address && markAsRead(notification.id, address)}
+                          onClick={() =>
+                            address && markAsRead(notification.id, address)
+                          }
                           className="p-1 text-blue-600 hover:text-blue-800 rounded"
                           title="Mark as read"
                         >
@@ -278,7 +284,9 @@ export function NotificationBell() {
                         </button>
                       )}
                       <button
-                        onClick={() => handleRemoveNotification(notification.id)}
+                        onClick={() =>
+                          handleRemoveNotification(notification.id)
+                        }
                         className="p-1 text-gray-400 hover:text-red-600 rounded"
                         title="Remove notification"
                       >

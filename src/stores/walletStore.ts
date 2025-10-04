@@ -15,7 +15,6 @@ interface WalletState {
     signer: ethers.Signer | null;
     isLoading: boolean;
     connect: () => Promise<void>;
-    setWalletState: (address: string, signer: ethers.Signer) => void;
     disconnect: () => void;
     checkConnection: () => Promise<boolean>;
     subscribeToStateChanges: (callback: StateChangeCallback) => () => void;
@@ -52,15 +51,6 @@ export const useWalletStore = create<WalletState>((set, get) => ({
                 isLoading: false,
             });
         }
-    },
-
-    setWalletState: (address: string, signer: ethers.Signer) => {
-        set({
-            isConnected: true,
-            address,
-            signer,
-            isLoading: false,
-        });
     },
 
     disconnect: () => {
