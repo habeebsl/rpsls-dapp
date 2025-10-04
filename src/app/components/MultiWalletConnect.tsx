@@ -10,32 +10,28 @@ export function MultiWalletConnect() {
   const { address, isConnected, connector } = useAccount();
   const { disconnect } = useDisconnect();
   const { open } = useAppKit();
-  const walletStore = useWalletStore();
 
   // Sync wagmi state with wallet store
   useEffect(() => {
     const syncWalletState = async () => {
       if (isConnected && address && connector) {
         try {
-          // Get the provider from the connector
           const provider = await connector.getProvider();
           const ethersProvider = new BrowserProvider(provider as any);
           const signer = await ethersProvider.getSigner();
 
-          // Update wallet store with address and signer
-          walletStore.connect();
-
-          console.log('✅ Wallet connected via', connector.name, ':', address);
+          useWalletStore.getState().setWalletState(address, signer);
         } catch (error) {
-          console.error('Error syncing wallet state:', error);
+          console.error('Error syncing wallet:', error);
+          useWalletStore.getState().disconnect();
         }
-      } else if (!isConnected) {
-        walletStore.disconnect();
+      } else {
+        useWalletStore.getState().disconnect();
       }
     };
 
     syncWalletState();
-  }, [isConnected, address, connector, walletStore]);
+  }, [isConnected, address, connector]);
 
   const handleConnect = async () => {
     try {
@@ -47,7 +43,7 @@ export function MultiWalletConnect() {
 
   const handleDisconnect = () => {
     disconnect();
-    walletStore.disconnect();
+    useWalletStore.getState().disconnect();
   };
 
   if (isConnected && address) {

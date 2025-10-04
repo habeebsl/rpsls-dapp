@@ -42,7 +42,7 @@ const metadata = {
     icons: ['https://avatars.githubusercontent.com/u/37784886'],
 };
 
-// Create the AppKit instance - Restricted to MetaMask only
+// Create the AppKit instance
 export const modal = createAppKit({
     adapters: [wagmiAdapter],
     projectId,
@@ -54,11 +54,10 @@ export const modal = createAppKit({
         email: false,
         socials: [],
     },
-    // Restrict to MetaMask only
+    // Featured wallet: MetaMask appears first
+    // On desktop: uses injected connector (browser extension)
+    // On mobile: uses WalletConnect to deep link to MetaMask app
     featuredWalletIds: [
-        'c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96', // MetaMask
-    ],
-    includeWalletIds: [
         'c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96', // MetaMask
     ],
 });

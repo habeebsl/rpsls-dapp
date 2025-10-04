@@ -15,7 +15,7 @@ import { PrimaryButton } from './PrimaryButton';
 import { GameCreationModal } from './GameCreationModal';
 
 export function NavBar() {
-  const { isConnected, address, connect, checkConnection } = useWalletStore();
+  const { isConnected, address, connect } = useWalletStore();
   const pathname = usePathname();
   const [isGameModalOpen, setIsGameModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -23,10 +23,8 @@ export function NavBar() {
   // Check if we're on a game page
   const isGamePage = pathname?.startsWith('/game/');
 
-  // Check wallet connection on component mount only
-  useEffect(() => {
-    checkConnection();
-  }, []);
+  // Note: Wallet connection checking is now handled by WalletSync component
+  // No need to call checkConnection() here anymore
 
   return (
     <div>
