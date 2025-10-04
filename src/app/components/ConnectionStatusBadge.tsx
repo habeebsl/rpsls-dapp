@@ -2,22 +2,18 @@
 
 import React from 'react';
 import { useWalletStore } from '@/stores/walletStore';
+import { useAppKit } from '@reown/appkit/react';
 
-interface ConnectionStatusBadgeProps {
-  onConnect: () => void;
-}
-
-export function ConnectionStatusBadge({
-  onConnect,
-}: ConnectionStatusBadgeProps) {
+export function ConnectionStatusBadge() {
   const { isConnected, address } = useWalletStore();
+  const { open } = useAppKit();
   const [isLoading, setIsLoading] = React.useState(false);
 
   const handleClick = async () => {
     if (!isConnected) {
       setIsLoading(true);
       try {
-        await onConnect();
+        await open();
       } finally {
         setIsLoading(false);
       }

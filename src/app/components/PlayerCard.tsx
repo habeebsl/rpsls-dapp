@@ -38,8 +38,8 @@ export function PlayerCard({
   const isCurrentUser =
     currentUserAddress?.toLowerCase() === address.toLowerCase();
   const TIMEOUT_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
-  // Note: The timeout button will have a 3-second safety buffer after the countdown
-  // reaches zero to ensure blockchain timing alignment
+  const TIMEOUT_SAFETY_BUFFER = 10 * 1000; // 10 seconds safety buffer for blockchain timing
+  const TOTAL_TIMEOUT_DURATION = TIMEOUT_DURATION + TIMEOUT_SAFETY_BUFFER; // 5:10 total
 
   // Calculate time remaining and timeout status
   useEffect(() => {
@@ -49,7 +49,8 @@ export function PlayerCard({
       const lastActionTime = parseInt(lastAction) * 1000; // Convert to milliseconds
       const now = Date.now();
       const elapsed = now - lastActionTime;
-      const remaining = TIMEOUT_DURATION - elapsed;
+      // Use total duration (5:10) so timer reaches zero when button becomes clickable
+      const remaining = TOTAL_TIMEOUT_DURATION - elapsed;
 
       if (remaining <= 0) {
         setIsTimeout(true);

@@ -146,7 +146,15 @@ export function GameCreationModal({ isOpen, onClose }: GameCreationModalProps) {
       );
       console.log('Notification sent to opponent');
 
-      // Step 4: Success! Navigate to the game immediately
+      // Step 4: Send notification to creator (self) for easy game access
+      await notificationHelpers.gameStarted(
+        userAddress,
+        opponentAddress,
+        result.contractAddress
+      );
+      console.log('Game started notification sent to creator');
+
+      // Step 5: Success! Navigate to the game immediately
       console.log('Game created successfully:', result.contractAddress);
 
       // Close modal first for instant feedback

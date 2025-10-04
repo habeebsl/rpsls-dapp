@@ -5,7 +5,14 @@ import { notificationApi } from '@/services/api';
 import { CreateNotificationRequest } from '@/types';
 
 export interface CreateNotificationParams {
-    type: 'game-request' | 'move-needed' | 'game-completed';
+    type:
+        | 'game-request'
+        | 'move-needed'
+        | 'game-completed'
+        | 'info'
+        | 'success'
+        | 'warning'
+        | 'error';
     message: string;
     from: string;
     to: string;
@@ -30,8 +37,9 @@ export async function createPersistentNotification(
             actionRequired: params.actionRequired,
         };
 
-        const response = await notificationApi.addNotification(notificationData);
-        
+        const response =
+            await notificationApi.addNotification(notificationData);
+
         if (response.success) {
             console.log('Notification created successfully:', response);
             return true;
@@ -61,6 +69,24 @@ export const notificationHelpers = {
             to: toAddress,
             gameId,
             actionRequired: 'accept',
+        });
+    },
+
+    /**
+     * Send a game started notification to the creator
+     */
+    gameStarted: (
+        creatorAddress: string,
+        opponentAddress: string,
+        gameId: string
+    ) => {
+        return createPersistentNotification({
+            type: 'success',
+            message: `You started a game with ${opponentAddress.slice(0, 6)}...${opponentAddress.slice(-4)}`,
+            from: creatorAddress,
+            to: creatorAddress,
+            gameId,
+            actionRequired: 'view',
         });
     },
 

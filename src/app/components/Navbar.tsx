@@ -78,7 +78,7 @@ export function NavBar() {
         <div className="flex items-center gap-3">
           {/* Mobile: Connection Status Badge - Hidden on desktop */}
           <div className="md:hidden">
-            <ConnectionStatusBadge onConnect={connect} />
+            <ConnectionStatusBadge />
           </div>
 
           {/* Notification Bell - Always visible */}

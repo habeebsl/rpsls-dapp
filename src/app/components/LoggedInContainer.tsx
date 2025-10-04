@@ -1,7 +1,7 @@
 'use client';
 
 import StatusIndicator from './StatusIndicator';
-import ConnectButton from './ConnectButton';
+import { MultiWalletConnect } from './MultiWalletConnect';
 import LoadingSpinner from './LoadingSpinner';
 
 interface LoggedInContainerProps {
@@ -45,7 +45,7 @@ export default function LoggedInContainer({
     <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-red-100 bg-opacity-50 border border-red-200">
       <StatusIndicator isConnected={false} />
       <span className="text-red-800 font-medium">Not Connected</span>
-      <ConnectButton onClick={onConnect} />
+      <MultiWalletConnect />
     </div>
   );
 }

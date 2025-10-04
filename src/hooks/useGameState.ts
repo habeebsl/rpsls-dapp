@@ -36,10 +36,10 @@ interface UseGameStateReturn {
 }
 
 const TIMEOUT_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
-// Add a 3-second safety buffer to account for blockchain timing differences
+// Add a 10-second safety buffer to account for blockchain timing differences
 // This prevents users from clicking the timeout button before the blockchain
 // considers the timeout period elapsed, which would cause the transaction to revert
-const TIMEOUT_SAFETY_BUFFER = 3 * 1000; // 3 seconds in milliseconds
+const TIMEOUT_SAFETY_BUFFER = 10 * 1000; // 10 seconds in milliseconds
 
 export function useGameState({
     contractAddress,
@@ -175,6 +175,9 @@ export function useGameState({
             const lastActionTime = parseInt(gameState.lastAction) * 1000; // Convert to milliseconds
             const now = Date.now();
             const elapsed = now - lastActionTime;
+            const timeUntilTimeout =
+                TIMEOUT_DURATION + TIMEOUT_SAFETY_BUFFER - elapsed;
+
             // Add safety buffer to prevent premature timeout calls
             // The blockchain might be slightly behind the frontend time
             const hasTimedOut =
@@ -192,12 +195,19 @@ export function useGameState({
 
             if (isCurrentUserJ1 && !gameState.hasPlayer2Played && hasTimedOut) {
                 shouldEnableTimeout = true;
+                console.log('⏰ Timeout button ENABLED for J1 to timeout J2');
             } else if (
                 isCurrentUserJ2 &&
                 gameState.hasPlayer2Played &&
                 hasTimedOut
             ) {
                 shouldEnableTimeout = true;
+                console.log('⏰ Timeout button ENABLED for J2 to timeout J1');
+            } else if (timeUntilTimeout > 0 && timeUntilTimeout < 15000) {
+                // Log when we're getting close (within 15 seconds)
+                console.log(
+                    `⏳ Timeout button will enable in ${Math.ceil(timeUntilTimeout / 1000)} seconds`
+                );
             }
 
             setTimeoutEnabled(shouldEnableTimeout);
