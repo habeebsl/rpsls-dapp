@@ -25,6 +25,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        {/* Mobile debugging console - Eruda */}
+        <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+        <script dangerouslySetInnerHTML={{ __html: 'eruda.init();' }} />
+      </head>
       <body className={`${inter.className} antialiased`}>
         <Web3ModalProvider>
           <NavBar />
