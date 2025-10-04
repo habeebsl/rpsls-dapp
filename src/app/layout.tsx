@@ -1,12 +1,12 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
-import Script from 'next/script';
 import './globals.css';
 import '@/lib/fontawesome'; // Initialize Font Awesome
 import { NavBar } from './components/Navbar';
 import { GlobalConfirmationModal } from './components/GlobalConfirmationModal';
 import { NotificationProvider } from './components/NotificationProvider';
 import { Web3ModalProvider } from './components/Web3ModalProvider';
+import { ErudaLoader } from './components/ErudaLoader';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -27,16 +27,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} antialiased`}>
-        {/* Mobile debugging console - Eruda */}
-        <Script
-          src="https://cdn.jsdelivr.net/npm/eruda"
-          strategy="beforeInteractive"
-          onLoad={() => {
-            if (typeof window !== 'undefined' && (window as any).eruda) {
-              (window as any).eruda.init();
-            }
-          }}
-        />
+        <ErudaLoader />
         <Web3ModalProvider>
           <NavBar />
           <NotificationProvider />
