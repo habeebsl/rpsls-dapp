@@ -27,7 +27,7 @@ if (projectId === 'PLACEHOLDER_PROJECT_ID_REPLACE_ME') {
 // Set up queryClient
 export const queryClient = new QueryClient();
 
-// Create Wagmi Adapter
+// Create Wagmi Adapter with explicit configuration for mobile WalletConnect
 export const wagmiAdapter = new WagmiAdapter({
     storage: createStorage({
         storage: cookieStorage,
@@ -35,6 +35,8 @@ export const wagmiAdapter = new WagmiAdapter({
     ssr: true,
     projectId,
     networks: [sepolia],
+    // Add polyfills for mobile browsers if needed
+    connectors: [], // Let WagmiAdapter auto-configure connectors
 });
 
 // Get Wagmi config
@@ -59,17 +61,15 @@ export const modal = createAppKit({
     defaultNetwork: sepolia,
     metadata,
     features: {
-        analytics: true, // Enable analytics for better debugging
+        analytics: true,
         email: false,
         socials: [],
+        onramp: false, // Disable buying crypto
     },
-    enableWalletConnect: true, // Explicitly enable WalletConnect
-    enableInjected: true, // Enable injected wallets (desktop)
-    enableCoinbase: false, // Disable coinbase for now
-    // Featured wallet: MetaMask appears first
-    // On desktop: uses injected connector (browser extension)
-    // On mobile: uses WalletConnect to deep link to MetaMask app
-    featuredWalletIds: [
-        'c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96', // MetaMask
+    // ONLY show MetaMask - no other wallets
+    includeWalletIds: [
+        'c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96', // MetaMask only
     ],
+    // Don't include wallet images to reduce load time
+    enableWalletGuide: false,
 });
