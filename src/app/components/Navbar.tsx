@@ -15,7 +15,7 @@ import { PrimaryButton } from './PrimaryButton';
 import { GameCreationModal } from './GameCreationModal';
 
 export function NavBar() {
-  const { isConnected, address, connect } = useWalletStore();
+  const { isConnected, address } = useWalletStore();
   const pathname = usePathname();
   const [isGameModalOpen, setIsGameModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);

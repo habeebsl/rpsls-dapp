@@ -1,9 +1,7 @@
 import { MetaMaskSDK } from '@metamask/sdk';
-import { ethers } from 'ethers';
+import { ethers, Eip1193Provider } from 'ethers';
 
-let MMSDK: MetaMaskSDK | null = null;
-
-export async function connectWallet() {
+export async function connectWallet(): Promise<Eip1193Provider> {
     // Wait for provider to be available
     const ethereum = await waitForProvider();
     if (!ethereum) {
@@ -17,7 +15,10 @@ export async function connectWallet() {
 }
 
 // Wait for MetaMask provider to be available
-async function waitForProvider(maxAttempts = 10, delay = 200): Promise<any> {
+async function waitForProvider(
+    maxAttempts = 10,
+    delay = 200
+): Promise<Eip1193Provider | null> {
     return new Promise(resolve => {
         let attempts = 0;
 
@@ -78,9 +79,9 @@ export async function switchToSepolia() {
             params: [{ chainId: '0xaa36a7' }], // Sepolia chain ID
         });
         return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
         // Chain not added, try to add it
-        if (error.code === 4902) {
+        if ((error as any).code === 4902) {
             try {
                 await ethereum.request({
                     method: 'wallet_addEthereumChain',

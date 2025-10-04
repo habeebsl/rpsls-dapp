@@ -14,7 +14,8 @@ import { useGameState } from '@/hooks/useGameState';
 import { useRevealMove } from '@/hooks/useRevealMove';
 import { useTimeout } from '@/hooks/useTimeout';
 import { useMoveSelection } from '@/hooks/useMoveSelection';
-import { NUMBER_TO_MOVE, Move } from '@/types';
+import { NUMBER_TO_MOVE, MOVE_TO_NUMBER, Move } from '@/types';
+import { getUserPerspectiveResult } from '@/utils/gameResults';
 import { ethers } from 'ethers';
 
 export default function GamePage() {
@@ -276,8 +277,8 @@ export default function GamePage() {
           if (j1Move) {
             console.log('✅ Have J1 move, calculating result...', {
               j1Move,
-              j1MoveNumber: require('@/types').MOVE_TO_NUMBER[j1Move],
-              j2Move: require('@/types').NUMBER_TO_MOVE[gameState.c2],
+              j1MoveNumber: MOVE_TO_NUMBER[j1Move as Move],
+              j2Move: NUMBER_TO_MOVE[gameState.c2],
               j2MoveNumber: gameState.c2,
               isCurrentUserJ1,
               isCurrentUserJ2,
@@ -370,9 +371,7 @@ export default function GamePage() {
                 absoluteWinner: 'j2-wins' as const,
                 j1Move: 'Unknown',
                 j2Move:
-                  gameState.c2 > 0
-                    ? require('@/types').NUMBER_TO_MOVE[gameState.c2]
-                    : 'Unknown',
+                  gameState.c2 > 0 ? NUMBER_TO_MOVE[gameState.c2] : 'Unknown',
                 stakeAmount: timeoutStake,
                 isTimeout: true,
                 timeoutWinner: 'j2' as const,
@@ -527,8 +526,7 @@ export default function GamePage() {
               j2Move:
                 timeoutWinnerFromRedis === 'j1'
                   ? 'Unknown' // J2 timed out if J1 won
-                  : require('@/types').NUMBER_TO_MOVE[gameState.c2] ||
-                    'Unknown',
+                  : NUMBER_TO_MOVE[gameState.c2] || 'Unknown',
               stakeAmount: originalStake || '0',
               isTimeout: true,
               timeoutWinner: timeoutWinnerFromRedis,
@@ -581,8 +579,7 @@ export default function GamePage() {
               timeoutWinner = 'j2';
               absoluteWinner = 'j2-wins';
               j1MoveDisplay = 'Unknown'; // J1 timed out, hide their move
-              j2MoveDisplay =
-                require('@/types').NUMBER_TO_MOVE[gameState.c2] || 'Unknown'; // J2 can show their move
+              j2MoveDisplay = NUMBER_TO_MOVE[gameState.c2] || 'Unknown'; // J2 can show their move
             }
 
             const timeoutResult = {
@@ -621,9 +618,6 @@ export default function GamePage() {
   const getJ1Result = (): 'win' | 'loss' | 'tie' | null => {
     if (!gameHasEnded || !gameResult) return null;
 
-    // Import the helper function
-    const { getUserPerspectiveResult } = require('@/utils/gameResults');
-
     // J1's result from J1's perspective
     return getUserPerspectiveResult(
       gameResult.absoluteWinner,
@@ -635,9 +629,6 @@ export default function GamePage() {
 
   const getJ2Result = (): 'win' | 'loss' | 'tie' | null => {
     if (!gameHasEnded || !gameResult) return null;
-
-    // Import the helper function
-    const { getUserPerspectiveResult } = require('@/utils/gameResults');
 
     // J2's result from J2's perspective
     return getUserPerspectiveResult(
@@ -681,7 +672,7 @@ export default function GamePage() {
             Game Not Found
           </h1>
           <p className="text-gray-600 mb-4">
-            The game you're looking for doesn't exist.
+            The game you&apos;re looking for doesn&apos;t exist.
           </p>
           <button
             onClick={() => {
@@ -745,7 +736,9 @@ export default function GamePage() {
                       <p className="text-sm font-medium text-blue-900">
                         🏁 Game Ended •{' '}
                         {gameResult.absoluteWinner === 'tie' ? (
-                          <span className="text-blue-700">It's a Tie!</span>
+                          <span className="text-blue-700">
+                            It&apos;s a Tie!
+                          </span>
                         ) : gameResult.absoluteWinner === 'j1-wins' ? (
                           <span className="text-green-700">Player 1 Wins!</span>
                         ) : (

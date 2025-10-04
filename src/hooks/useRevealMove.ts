@@ -40,9 +40,6 @@ export function useRevealMove({
     fetchGameState,
     notifyMove,
 }: UseRevealMoveProps): UseRevealMoveReturn {
-    const [gameResult, setGameResult] = useState<any>(null);
-    const [showResultModal, setShowResultModal] = useState(false);
-
     const handleRevealMove = async () => {
         if (!signer || !gameState || !currentUserAddress) {
             throw new Error('Wallet not connected or game state not loaded');
