@@ -1,3 +1,4 @@
+import '@reown/appkit-polyfills'; // MUST be first - mobile browser support
 import { createAppKit } from '@reown/appkit/react';
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
 import { sepolia } from '@reown/appkit/networks';
