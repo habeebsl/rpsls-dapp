@@ -13,6 +13,15 @@ if (projectId === 'PLACEHOLDER_PROJECT_ID_REPLACE_ME') {
     console.warn(
         '⚠️ Using placeholder WalletConnect Project ID. Get a real one from https://cloud.walletconnect.com'
     );
+} else {
+    console.log(
+        '✅ WalletConnect Project ID loaded:',
+        projectId.substring(0, 8) + '...'
+    );
+    console.log(
+        '🌐 Current origin:',
+        typeof window !== 'undefined' ? window.location.origin : 'SSR'
+    );
 }
 
 // Set up queryClient
@@ -50,10 +59,13 @@ export const modal = createAppKit({
     defaultNetwork: sepolia,
     metadata,
     features: {
-        analytics: false,
+        analytics: true, // Enable analytics for better debugging
         email: false,
         socials: [],
     },
+    enableWalletConnect: true, // Explicitly enable WalletConnect
+    enableInjected: true, // Enable injected wallets (desktop)
+    enableCoinbase: false, // Disable coinbase for now
     // Featured wallet: MetaMask appears first
     // On desktop: uses injected connector (browser extension)
     // On mobile: uses WalletConnect to deep link to MetaMask app
