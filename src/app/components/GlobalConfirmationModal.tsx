@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { PrimaryButton } from './PrimaryButton';
 import { useConfirmationStore } from '@/stores/confirmationStore';
-import { getMoveIcon, getMoveEmoji } from '@/lib/moves';
+import { getMoveIcon } from '@/lib/moves';
 
 export function GlobalConfirmationModal() {
   const {
@@ -34,45 +34,34 @@ export function GlobalConfirmationModal() {
   };
 
   const moveIcon = move ? getMoveIcon(move) : null;
-  const moveEmoji = move ? getMoveEmoji(move) : null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Background Overlay */}
       <div
         className="absolute inset-0 bg-black opacity-30"
         onClick={!isLoading ? handleCancel : undefined}
       />
 
-      {/* Modal Container */}
       <div className="relative bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
-        {/* Close Button - Disabled during loading */}
         {!isLoading && (
           <button
             onClick={handleCancel}
             className="absolute top-4 right-4 px-2 py-1 text-gray-400 hover:text-gray-600 transition-colors rounded-full hover:bg-gray-100"
           >
-            <FontAwesomeIcon icon={faTimes} size={"sm"} />
+            <FontAwesomeIcon icon={faTimes} size={'sm'} />
           </button>
         )}
 
-        {/* Modal Content */}
         <div className="text-center">
-          {/* Title */}
           <h3 className="text-xl font-bold text-gray-900 mb-4">{title}</h3>
 
-          {/* Move Display */}
           {move && (
             <div className="mb-4">
               <div className="w-20 h-20 mx-auto mb-3 bg-blue-50 rounded-full flex items-center justify-center border-2 border-blue-200">
-                {moveIcon ? (
-                  <FontAwesomeIcon 
-                    icon={moveIcon} 
-                    className="text-3xl text-blue-600" 
+                  <FontAwesomeIcon
+                    icon={moveIcon}
+                    className="text-3xl text-blue-600"
                   />
-                ) : (
-                  <span className="text-3xl">{moveEmoji}</span>
-                )}
               </div>
               <div className="text-lg font-semibold text-gray-800 mb-2">
                 {move}
@@ -80,12 +69,9 @@ export function GlobalConfirmationModal() {
             </div>
           )}
 
-          {/* Message */}
           <p className="text-gray-600 mb-6">{message}</p>
 
-          {/* Action Buttons */}
           <div className="flex gap-3 justify-center">
-            {/* Cancel Button - Disabled during loading */}
             <button
               onClick={handleCancel}
               disabled={isLoading}
@@ -105,7 +91,9 @@ export function GlobalConfirmationModal() {
               width={160}
               height={40}
               backgroundColor={isLoading ? 'bg-gray-400' : 'bg-blue-500'}
-              hoverBackgroundColor={isLoading ? 'hover:bg-gray-400' : 'hover:bg-blue-600'}
+              hoverBackgroundColor={
+                isLoading ? 'hover:bg-gray-400' : 'hover:bg-blue-600'
+              }
               shadowColor={isLoading ? 'bg-gray-600' : 'bg-blue-700'}
               onClick={!isLoading ? handleConfirm : undefined}
               className={`transition-colors ${

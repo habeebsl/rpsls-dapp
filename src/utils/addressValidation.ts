@@ -15,26 +15,11 @@ export interface AddressValidation {
 export const validateSepoliaAddress = async (
     address: string
 ): Promise<AddressValidation> => {
-    // // First check basic format
-    // if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
-    //     return { isValid: false, isChecking: false, exists: null };
-    // }
-
     try {
-        // Call our secure API route for validation
         const response = await axios.post('/api/validate-address', { address });
         return response.data;
     } catch (error) {
         console.error('Error validating Sepolia address:', error);
         return { isValid: true, isChecking: false, exists: false };
     }
-};
-
-/**
- * Simple Ethereum address format validation
- * @param address - The address to validate
- * @returns boolean indicating if the format is valid
- */
-export const isValidEthereumAddressFormat = (address: string): boolean => {
-    return /^0x[a-fA-F0-9]{40}$/.test(address);
 };

@@ -68,15 +68,6 @@ export function getStoredJ1Move(gameContractAddress: string): Move | null {
 }
 
 /**
- * Retrieve J1's stored nonce from localStorage
- * @param gameContractAddress The game contract address
- * @returns The stored nonce or null if not found
- */
-export function getStoredJ1Nonce(gameContractAddress: string): string | null {
-    return localStorage.getItem(`j1Nonce_${gameContractAddress}`);
-}
-
-/**
  * Clear stored J1 data for a game
  * @param gameContractAddress The game contract address
  */
@@ -109,21 +100,5 @@ export function getMoveIcon(move: string) {
         case 'Lizard': return faHandLizard;
         case 'Spock': return faHandSpock;
         default: return null;
-    }
-}
-
-/**
- * Get emoji for a move
- * @param move The move to get emoji for
- * @returns Emoji string
- */
-export function getMoveEmoji(move: string): string {
-    switch (move) {
-        case 'Rock': return '🪨';
-        case 'Paper': return '📄';
-        case 'Scissors': return '✂️';
-        case 'Lizard': return '🦎';
-        case 'Spock': return '🖖';
-        default: return '❓';
     }
 }

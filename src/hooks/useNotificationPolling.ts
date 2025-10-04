@@ -28,7 +28,7 @@ export function useNotificationPolling() {
             if (address && isConnected && !document.hidden) {
                 loadNotifications(address);
             }
-        }, 30000); // 30 seconds
+        }, 30000);
 
         console.log('Notification polling started');
     };

@@ -16,17 +16,25 @@ function initializeSDK() {
         return null;
     }
 
-    // Initialize SDK for mobile browsers
+    // Initialize SDK for mobile browsers with persistence
     console.log('Initializing MetaMask SDK for mobile support...');
     MMSDK = new MetaMaskSDK({
         dappMetadata: {
             name: 'RPSLS dApp',
             url: typeof window !== 'undefined' ? window.location.origin : '',
         },
+        // Enable storage for persistent connections
+        storage: {
+            enabled: true,
+        },
         // Logging for debugging (remove in production)
         logging: {
             developerMode: false,
         },
+        // Don't automatically open deep link on every check
+        checkInstallationImmediately: false,
+        // Prefer in-app browser when possible
+        preferDesktop: false,
     });
 
     return MMSDK;
@@ -89,8 +97,11 @@ async function waitForProvider(maxAttempts = 10, delay = 200): Promise<any> {
 }
 
 export async function checkExistingConnection() {
-    // Initialize SDK first (for mobile)
-    initializeSDK();
+    // Initialize SDK ONLY if not already initialized
+    // This prevents unnecessary re-initialization on every check
+    if (!MMSDK && typeof window !== 'undefined' && !(window as any).ethereum) {
+        initializeSDK();
+    }
 
     const ethereum = await waitForProvider();
     if (!ethereum) {
@@ -99,7 +110,6 @@ export async function checkExistingConnection() {
     }
 
     try {
-        // Check existing accounts without triggering popup
         const accounts = (await ethereum.request({
             method: 'eth_accounts',
         })) as string[];

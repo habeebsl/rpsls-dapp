@@ -13,7 +13,6 @@ export async function GET(request: NextRequest) {
             );
         }
 
-        // Check if user has any game history (indicating they've used the app)
         const gameHistory = await getGameHistory(address);
         const exists = gameHistory.length > 0;
 

@@ -67,60 +67,27 @@ export function useGameState({
         try {
             // Fetch game state - works for both players and spectators
             const state = await getGameState(contractAddress, signer);
-            // Enhanced logging to debug blockchain sync issues
-            console.log('🔍 Blockchain state fetched:', {
-                contractAddress: contractAddress.slice(0, 10) + '...',
-                hasPlayer2Played: state.hasPlayer2Played,
-                c2Value: state.c2,
-                gameActive: state.stake !== '0',
-                timestamp: new Date().toISOString(),
-                isInitialLoad,
-                isSpectator: !currentUserAddress,
-            });
             setGameState(state);
 
             // Only try to fetch user's move if they are connected and potentially a player
             if (currentUserAddress) {
                 try {
-                    console.log('🔍 Fetching user move for:', {
-                        contractAddress,
-                        currentUserAddress,
-                    });
                     const moveResponse = await gameApi.getUserMove(
                         contractAddress,
                         currentUserAddress
                     );
-                    console.log('📦 User move response:', moveResponse);
                     if (moveResponse && moveResponse.move) {
-                        console.log('✅ Setting user move:', moveResponse.move);
                         setUserMove(moveResponse.move as Move);
                         setUserHasSelectedMove(true);
-                    } else {
-                        console.log('❌ No move found in response');
                     }
                 } catch (moveError: any) {
-                    console.log(
-                        '⚠️ getUserMove API call failed or returned 404:',
-                        {
-                            status: moveError.response?.status,
-                            message: moveError.message,
-                            contractAddress,
-                            userAddress: currentUserAddress,
-                        }
-                    );
                     // 404 is expected if player hasn't made a move yet - ignore it
                     if (moveError.response?.status !== 404) {
-                        console.warn(
-                            'Error fetching user move (non-critical):',
-                            {
-                                status: moveError.response?.status,
-                                message: moveError.message,
-                                contractAddress,
-                                userAddress: currentUserAddress,
-                            }
-                        );
+                        console.error('Error fetching user move:', {
+                            status: moveError.response?.status,
+                            message: moveError.message,
+                        });
                     }
-                    // Don't set any move data - player hasn't moved yet
                 }
             }
 
@@ -140,13 +107,9 @@ export function useGameState({
     const { notifyMove } = useGameSync({
         gameId: contractAddress,
         onGameUpdate: async () => {
-            console.log(
-                '🔄 Real-time update received, waiting for blockchain to propagate...'
-            );
             // Wait 2 seconds to allow blockchain state to propagate across nodes
             await new Promise(resolve => setTimeout(resolve, 2000));
-            console.log('🔄 Now fetching updated game state...');
-            fetchGameState(false); // Refresh without loading screen
+            fetchGameState(false);
         },
         onGameEnd: onGameEnd,
         enabled: !!contractAddress && !!currentUserAddress && !!signer,
@@ -195,19 +158,12 @@ export function useGameState({
 
             if (isCurrentUserJ1 && !gameState.hasPlayer2Played && hasTimedOut) {
                 shouldEnableTimeout = true;
-                console.log('⏰ Timeout button ENABLED for J1 to timeout J2');
             } else if (
                 isCurrentUserJ2 &&
                 gameState.hasPlayer2Played &&
                 hasTimedOut
             ) {
                 shouldEnableTimeout = true;
-                console.log('⏰ Timeout button ENABLED for J2 to timeout J1');
-            } else if (timeUntilTimeout > 0 && timeUntilTimeout < 15000) {
-                // Log when we're getting close (within 15 seconds)
-                console.log(
-                    `⏳ Timeout button will enable in ${Math.ceil(timeUntilTimeout / 1000)} seconds`
-                );
             }
 
             setTimeoutEnabled(shouldEnableTimeout);
@@ -230,15 +186,6 @@ export function useGameState({
         ? j1HasPlayed
         : j2HasPlayed;
     const gameHasEnded = gameState?.stake === '0';
-
-    // Debug logging for game state
-    console.log('📊 useGameState derived values:', {
-        stake: gameState?.stake,
-        stakeType: typeof gameState?.stake,
-        stakeEqualsZeroString: gameState?.stake === '0',
-        gameHasEnded,
-        currentUserAddress,
-    });
 
     return {
         gameState,

@@ -39,11 +39,7 @@ export function MoveContainer({
 
   const handleMoveConfirm = async (move: Move) => {
     if (hasSelectedMove || gameHasEnded) return;
-
-    // Only J2 should be making moves through this component
-    // J1's move was already made during game creation
     await onSelectionConfirmed(move);
-
     setCurrentSelection(null);
   };
 
@@ -86,14 +82,11 @@ export function MoveContainer({
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4 justify-items-center">
           {ALL_MOVES.map(move => {
-            // Check if this move is selected (either from confirmed selection or current selection)
             const isThisSelected =
               hasSelectedMove || displaySelectedMove
                 ? move === displaySelectedMove
                 : move === currentSelection;
 
-            // Disable logic: disable non-selected moves if a move is selected or game has ended
-            // When game has ended, disable non-selected moves but keep selected move visible
             const isDisabled =
               !!(hasSelectedMove || gameHasEnded || displaySelectedMove) &&
               move !== displaySelectedMove;

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
-import '@/lib/fontawesome'; // Initialize Font Awesome
+import '@/lib/fontawesome';
 import { NavBar } from './components/Navbar';
 import { GlobalConfirmationModal } from './components/GlobalConfirmationModal';
 import { NotificationProvider } from './components/NotificationProvider';

@@ -6,10 +6,8 @@ import {
   CreateNotificationRequest,
   GetNotificationsResponse,
   NotificationResponse,
-  MarkAsReadRequest
 } from '@/types';
 
-// Create axios instance with base configuration
 const api = axios.create({
   baseURL: '/api',
   headers: {
@@ -100,5 +98,4 @@ export const notificationApi = {
   },
 };
 
-// Export the axios instance for custom requests if needed
 export { api };

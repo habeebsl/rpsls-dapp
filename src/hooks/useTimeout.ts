@@ -61,15 +61,11 @@ export function useTimeout({
                 throw new Error('Invalid timeout condition');
             }
 
-            console.log('Timeout transaction submitted:', transaction.hash);
-
             // Wait for transaction to be mined
             await transaction.wait();
-            console.log('Timeout transaction confirmed');
 
             const completedAt = new Date().toISOString();
 
-            // Get player moves if available
             let currentUserMove: string | undefined;
             let opponentMove: string | undefined;
 
@@ -83,10 +79,7 @@ export function useTimeout({
                     currentUserMove = moveResponse.move;
                 }
             } catch (error) {
-                // Move not found is okay, might not have been made yet
-                console.log(
-                    'Current user move not found (expected for J1 timeout)'
-                );
+                // Move not found is expected if player hasn't made a move yet
             }
 
             // Get opponent's move if J2 has played (visible on blockchain)
@@ -137,9 +130,6 @@ export function useTimeout({
             // Notify real-time listeners that game ended via timeout
             if (notifyMove) {
                 await notifyMove('timeout');
-                console.log(
-                    '📢 Notified other players of timeout via real-time'
-                );
             }
 
             // Show timeout result modal
@@ -149,70 +139,32 @@ export function useTimeout({
                 : 'j2-wins';
 
             // Fetch original stake from Redis (since gameState.stake might be 0 after timeout)
-            let originalStake = ethers.formatEther(gameState.stake); // fallback
-            console.log('🔍 DEBUG: Fetching stake from Redis...', {
-                contractAddress,
-                j1Address: gameState.j1,
-                fallbackStakeFromBlockchain: originalStake,
-                gameStateStake: gameState.stake,
-            });
+            let originalStake = ethers.formatEther(gameState.stake);
 
             try {
                 const gameResultResponse = await gameApi.getGameResult(
                     contractAddress,
-                    gameState.j1 // Get J1's game result which has the original stake
+                    gameState.j1
                 );
-                console.log('🔍 DEBUG: Redis response:', {
-                    success: gameResultResponse.success,
-                    hasGameResult: !!gameResultResponse.gameResult,
-                    fullResponse: JSON.stringify(gameResultResponse, null, 2),
-                });
 
                 if (
                     gameResultResponse.success &&
                     gameResultResponse.gameResult
                 ) {
-                    const redisStake = gameResultResponse.gameResult.stake;
-                    console.log('🔍 DEBUG: Stake from Redis:', {
-                        redisStake,
-                        redisStakeType: typeof redisStake,
-                        redisStakeLength: redisStake?.length,
-                        willUseThisStake:
-                            redisStake || 'NO - will use fallback',
-                    });
-
                     originalStake = gameResultResponse.gameResult.stake;
-                    console.log(
-                        '✅ Found original stake from Redis:',
-                        originalStake
-                    );
-                } else {
-                    console.warn(
-                        '❌ Redis response not successful or missing gameResult'
-                    );
                 }
             } catch (stakeError) {
-                console.warn('💥 Error fetching stake from Redis:', stakeError);
-                console.warn('Using blockchain fallback value:', originalStake);
+                console.error('Error fetching stake from Redis:', stakeError);
             }
-
-            console.log(
-                '🎯 FINAL stake value that will be used:',
-                originalStake
-            );
 
             const timeoutResult = {
                 absoluteWinner,
-                j1Move: 'Unknown', // Timeout: moves not revealed
-                j2Move: 'Unknown', // Timeout: moves not revealed
+                j1Move: 'Unknown',
+                j2Move: 'Unknown',
                 stakeAmount: originalStake,
                 isTimeout: true,
                 timeoutWinner,
             };
-
-            // These would need to be passed back to parent
-            // setGameResult(timeoutResult);
-            // setShowResultModal(true);
 
             // Refresh game state
             await fetchGameState();
@@ -221,7 +173,6 @@ export function useTimeout({
         } catch (error) {
             console.error('Error calling timeout:', error);
 
-            // Create user-friendly error message
             let errorMessage = 'Failed to call timeout. Please try again.';
 
             if (error instanceof Error) {

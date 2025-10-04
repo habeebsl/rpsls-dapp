@@ -19,15 +19,9 @@ export function GameActionButtons({
   onRevealMove,
   onTimeout,
 }: GameActionButtonsProps) {
-  // Reveal button: Only J1 can reveal, and only when game hasn't ended
   const showRevealButton = isCurrentUserJ1 && !gameHasEnded;
-
-  // Timeout button: Both players can call timeout when enabled
   const showTimeoutButton = !gameHasEnded;
-
   const shouldShowBar = showRevealButton || showTimeoutButton;
-
-  // Check if buttons are actually enabled (not just visible)
   const isRevealEnabled = j2HasPlayed && !gameHasEnded;
   const isTimeoutEnabled = timeoutEnabled && !gameHasEnded;
 
@@ -35,9 +29,7 @@ export function GameActionButtons({
 
   return (
     <>
-      {/* Desktop: Floating buttons on right side */}
       <div className="hidden lg:flex lg:absolute lg:top-30 lg:right-10 lg:z-10 lg:flex-col lg:gap-8">
-        {/* Reveal Move Button - Only show for J1 */}
         {showRevealButton && (
           <PrimaryButton
             text="Reveal Move"
@@ -66,7 +58,6 @@ export function GameActionButtons({
         )}
       </div>
 
-      {/* Mobile: Fixed bottom bar */}
       <div
         className="
         lg:hidden
@@ -82,7 +73,6 @@ export function GameActionButtons({
           ${showRevealButton && showTimeoutButton ? 'flex-col min-[400px]:flex-row' : 'flex-col'}
         `}
         >
-          {/* Reveal Move Button - Only show for J1 */}
           {showRevealButton && (
             <PrimaryButton
               text="Reveal Move"

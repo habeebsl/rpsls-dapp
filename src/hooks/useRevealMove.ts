@@ -1,9 +1,8 @@
-import { useState } from 'react';
 import { solve, determineGameOutcome } from '@/lib/contract';
 import { gameApi } from '@/services/api';
 import { notificationHelpers } from '@/utils/notifications';
 import { MOVE_TO_NUMBER, NUMBER_TO_MOVE, Move, GameState } from '@/types';
-import { ethers, Signer } from 'ethers';
+import { Signer } from 'ethers';
 
 interface UseRevealMoveProps {
     contractAddress: string;
@@ -40,9 +39,6 @@ export function useRevealMove({
     fetchGameState,
     notifyMove,
 }: UseRevealMoveProps): UseRevealMoveReturn {
-    const [gameResult, setGameResult] = useState<any>(null);
-    const [showResultModal, setShowResultModal] = useState(false);
-
     const handleRevealMove = async () => {
         if (!signer || !gameState || !currentUserAddress) {
             throw new Error('Wallet not connected or game state not loaded');
@@ -92,13 +88,6 @@ export function useRevealMove({
                 throw new Error(`Invalid move: ${userMove}`);
             }
 
-            console.log(
-                'Revealing move:',
-                userMove,
-                'with move number:',
-                moveNumber
-            );
-
             // Call the solve function with the original move and salt
             const transaction = await solve(
                 contractAddress,
@@ -106,16 +95,13 @@ export function useRevealMove({
                 gameResultData.salt,
                 signer
             );
-            console.log('Reveal transaction submitted:', transaction.hash);
 
             // Wait for transaction to be mined
             await transaction.wait();
-            console.log('Move revealed successfully');
 
             // Notify other players of the move reveal
             if (notifyMove) {
                 await notifyMove('move_revealed');
-                console.log('📢 Notified other players of move reveal');
             }
 
             // Refresh game state to reflect the reveal
@@ -128,7 +114,6 @@ export function useRevealMove({
                 gameState.c2,
                 signer
             );
-            console.log('Game outcome:', outcome);
 
             const completedAt = new Date().toISOString();
             const opponentAddress = gameState.j2; // J2 is the opponent for J1

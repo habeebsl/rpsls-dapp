@@ -54,7 +54,7 @@ export async function createPersistentNotification(
 }
 
 /**
- * Example usage functions for different notification types
+ * Functions for different notification types
  */
 
 export const notificationHelpers = {

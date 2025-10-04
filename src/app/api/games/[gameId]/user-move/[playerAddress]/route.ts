@@ -20,22 +20,17 @@ export async function GET(
             );
         }
 
-        // Use consistent provider
         const provider = getConsistentProvider();
-
-        // For read-only operations, we can create a dummy signer from the provider
         const wallet = new ethers.Wallet(
             ethers.hexlify(ethers.randomBytes(32)),
             provider
         );
 
-        // Initialize Redis client
         const redis = createClient({
             url: process.env.REDIS_URL,
         });
         await redis.connect();
 
-        // Use the existing getGameState function
         const gameState = await getGameState(gameId, wallet);
 
         const { j1, j2, c2, c1Hash } = gameState;
@@ -43,7 +38,6 @@ export async function GET(
         const isJ1 = playerAddress.toLowerCase() === j1.toLowerCase();
         const isJ2 = playerAddress.toLowerCase() === j2.toLowerCase();
 
-        // Security: Only return move if the requester is actually a player in this game
         if (!isJ1 && !isJ2) {
             return NextResponse.json(
                 { error: 'Not authorized to view moves for this game' },
@@ -54,13 +48,9 @@ export async function GET(
         let userMove: string | null = null;
 
         if (isJ1) {
-            // For J1: Get salt from user's game history in Redis
             const historyKey = `rpsls-account:${playerAddress}:history`;
             const gameHistory = await redis.lRange(historyKey, 0, -1);
-
             let storedSalt: string | null = null;
-
-            // Find the game in user's history
             for (const gameData of gameHistory) {
                 const gameResult = JSON.parse(gameData);
                 if (gameResult.contractAddress === gameId) {
@@ -76,7 +66,6 @@ export async function GET(
                 );
             }
 
-            // Try to recover the move by testing all possibilities
             userMove = recoverMoveFromNonce(storedSalt, c1Hash);
 
             if (!userMove) {
@@ -86,11 +75,9 @@ export async function GET(
                 );
             }
         } else if (isJ2) {
-            // For J2: Move is directly available from contract
             if (c2 > 0 && c2 <= 5) {
                 userMove = NUMBER_TO_MOVE[c2];
             } else {
-                // J2 hasn't played yet
                 return NextResponse.json(
                     { error: 'Player 2 has not made a move yet' },
                     { status: 404 }
@@ -98,7 +85,6 @@ export async function GET(
             }
         }
 
-        // Clean up Redis connection
         await redis.quit();
 
         return NextResponse.json({

@@ -48,12 +48,9 @@ export function MoveCard({
       onConfirm: async () => {
         try {
           await onConfirm(move);
-          // Close modal only after the move selection is completely done
           closeConfirmation();
         } catch (error) {
-          // Don't close modal on error - let user try again or cancel
-          console.error('Move confirmation failed:', error);
-          throw error; // Re-throw so the confirmation store can handle loading state
+          throw error;
         }
       },
     });

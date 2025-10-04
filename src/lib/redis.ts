@@ -15,8 +15,8 @@ export interface GameResult {
     salt: string; // Required for reveal phase
     type?: 'win' | 'loss' | 'tie'; // Only set when game is completed
     opponent?: string;
-    playerChoice?: string;
-    opponentChoice?: string;
+    playerChoice?: string; // Only set when game is completed
+    opponentChoice?: string; // Only set when game is completed
     createdAt?: string;
     completedAt?: string;
 }
@@ -93,15 +93,15 @@ export async function addNotification(notification: PersistentNotification) {
         await ensureConnection();
         const notificationKey = `${notificationPrefixKey}${notification.to}`;
         const countKey = `${notificationCountKey}${notification.to}`;
-        
-        // Add notification to user's list with 7 day TTL
+
+        // Add notification with 7 day TTL
         await client.lPush(notificationKey, JSON.stringify(notification));
-        await client.expire(notificationKey, 7 * 24 * 60 * 60); // 7 days
-        
+        await client.expire(notificationKey, 7 * 24 * 60 * 60);
+
         // Increment unread count if notification is unread
         if (!notification.read) {
             await client.incr(countKey);
-            await client.expire(countKey, 7 * 24 * 60 * 60); // 7 days
+            await client.expire(countKey, 7 * 24 * 60 * 60);
         }
     } catch (error) {
         console.error('Error adding notification:', error);
@@ -113,7 +113,7 @@ export async function getNotifications(userAddress: string): Promise<PersistentN
     try {
         await ensureConnection();
         const notificationKey = `${notificationPrefixKey}${userAddress}`;
-        
+
         const notifications = await client.lRange(notificationKey, 0, -1);
         return notifications.map((item: string) => JSON.parse(item) as PersistentNotification);
     } catch (error) {
@@ -127,16 +127,16 @@ export async function markNotificationAsRead(userAddress: string, notificationId
         await ensureConnection();
         const notificationKey = `${notificationPrefixKey}${userAddress}`;
         const countKey = `${notificationCountKey}${userAddress}`;
-        
+
         const notifications = await client.lRange(notificationKey, 0, -1);
-        
+
         for (let i = 0; i < notifications.length; i++) {
             const notification = JSON.parse(notifications[i]) as PersistentNotification;
             if (notification.id === notificationId && !notification.read) {
                 // Mark as read
                 notification.read = true;
                 await client.lSet(notificationKey, i, JSON.stringify(notification));
-                
+
                 // Decrement unread count
                 const currentCount = await client.get(countKey);
                 if (currentCount && parseInt(currentCount) > 0) {
@@ -156,7 +156,7 @@ export async function getUnreadNotificationCount(userAddress: string): Promise<n
     try {
         await ensureConnection();
         const countKey = `${notificationCountKey}${userAddress}`;
-        
+
         const count = await client.get(countKey);
         return count ? parseInt(count) : 0;
     } catch (error) {
@@ -170,11 +170,11 @@ export async function clearAllNotifications(userAddress: string): Promise<boolea
         await ensureConnection();
         const notificationKey = `${notificationPrefixKey}${userAddress}`;
         const countKey = `${notificationCountKey}${userAddress}`;
-        
+
         // Delete the notification list and count
         await client.del(notificationKey);
         await client.del(countKey);
-        
+
         return true;
     } catch (error) {
         console.error('Error clearing all notifications:', error);

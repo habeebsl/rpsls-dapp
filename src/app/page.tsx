@@ -7,17 +7,15 @@ import { useWalletStore } from '@/stores/walletStore';
 import { PrimaryButton } from '@/app/components/PrimaryButton';
 import { LoadingScreen } from '@/app/components/LoadingScreen';
 import { GameCreationModal } from '@/app/components/GameCreationModal';
+
 export default function Home() {
   const { isConnected, address, connect, isLoading } = useWalletStore();
-
-  // Real wins data from Redis
   const [userWins, setUserWins] = useState(0);
   const [displayWins, setDisplayWins] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [isLoadingWins, setIsLoadingWins] = useState(true); // Start as true to prevent flash
+  const [isLoadingWins, setIsLoadingWins] = useState(true);
   const [isGameModalOpen, setIsGameModalOpen] = useState(false);
 
-  // Fetch user wins from API
   const fetchUserWins = async () => {
     if (!address || !isConnected) {
       setUserWins(0);
@@ -42,27 +40,24 @@ export default function Home() {
     }
   };
 
-  // Load user wins when connected
   useEffect(() => {
     if (isConnected && address) {
       fetchUserWins();
     } else if (isConnected === false) {
-      // User is not connected, stop loading
       setUserWins(0);
       setDisplayWins(0);
       setIsLoadingWins(false);
     }
-    // Keep loading when isConnected is null (still checking connection)
   }, [isConnected, address]);
 
-  // Counting animation effect
+  // Animated counter for wins display
   useEffect(() => {
     if (isConnected && userWins > 0) {
       setIsAnimating(true);
       setDisplayWins(0);
 
-      const duration = 1500; // 1.5 seconds
-      const steps = Math.min(userWins, 30); // Max 30 steps for smooth animation
+      const duration = 1500;
+      const steps = Math.min(userWins, 30);
       const stepValue = userWins / steps;
       const stepDuration = duration / steps;
 
@@ -85,7 +80,6 @@ export default function Home() {
     }
   }, [isConnected, userWins]);
 
-  // Show loading screen when wallet is still connecting or loading wins
   if (isLoading || isConnected === null || (isConnected && isLoadingWins)) {
     return <LoadingScreen />;
   }
@@ -94,12 +88,10 @@ export default function Home() {
     <div className="bg-gray-100 min-h-screen pt-20 flex items-center justify-center">
       <main className="container mx-auto px-4">
         <div className="text-center max-w-2xl mx-auto">
-          {/* Main Heading */}
           <h1 className="text-5xl font-bold text-gray-800 mb-16">
             {isConnected ? 'Welcome back!' : 'Hey New guy'}
           </h1>
 
-          {/* Sub Text */}
           {isConnected ? (
             <div className="mb-16">
               <p className="text-2xl text-gray-600 mb-4">You have</p>
@@ -129,7 +121,6 @@ export default function Home() {
             </p>
           )}
 
-          {/* Action Buttons */}
           <div className="flex flex-col items-center gap-6">
             {!isConnected ? (
               <PrimaryButton
@@ -162,7 +153,6 @@ export default function Home() {
         </div>
       </main>
 
-      {/* Game Creation Modal */}
       <GameCreationModal
         isOpen={isGameModalOpen}
         onClose={() => setIsGameModalOpen(false)}

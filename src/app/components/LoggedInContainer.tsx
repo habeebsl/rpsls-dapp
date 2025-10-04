@@ -15,7 +15,6 @@ export default function LoggedInContainer({
   userAddress,
   onConnect,
 }: LoggedInContainerProps) {
-  // Loading state
   if (isConnected === null) {
     return (
       <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-gray-100 bg-opacity-50 border">
@@ -25,7 +24,6 @@ export default function LoggedInContainer({
     );
   }
 
-  // Connected state
   if (isConnected) {
     return (
       <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-green-100 bg-opacity-50 border border-green-200">
@@ -40,7 +38,6 @@ export default function LoggedInContainer({
     );
   }
 
-  // Not connected state
   return (
     <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-red-100 bg-opacity-50 border border-red-200">
       <StatusIndicator isConnected={false} />

@@ -28,32 +28,22 @@ export const useGameSync = ({
             return;
         }
 
-        console.log(`🚀 Setting up real-time sync for game: ${gameId}`);
-
         // Subscribe to game updates
         const channel = subscribeToGameUpdates(
             gameId,
             (message: GameSyncMessage) => {
                 // Only react to other players' actions (not our own)
                 if (message.playerId !== address) {
-                    console.log(
-                        `🔄 Other player action detected: ${message.action}`
-                    );
-                    onGameUpdate(); // Trigger immediate game state refresh
+                    onGameUpdate();
 
-                    // If this is a move reveal or timeout, the game has ended - notify callback
+                    // If this is a move reveal or timeout, the game has ended
                     if (
                         (message.action === 'move_revealed' ||
                             message.action === 'timeout') &&
                         onGameEnd
                     ) {
-                        console.log(
-                            `🎯 Game ended via real-time: ${message.action}`
-                        );
                         onGameEnd(message.action);
                     }
-                } else {
-                    console.log(`ℹ️ Own action ignored: ${message.action}`);
                 }
             }
         );
@@ -62,7 +52,6 @@ export const useGameSync = ({
 
         // Cleanup subscription
         return () => {
-            console.log(`🧹 Cleaning up game sync for: ${gameId}`);
             if (channelRef.current) {
                 channelRef.current.unsubscribe();
                 channelRef.current = null;
@@ -70,16 +59,10 @@ export const useGameSync = ({
         };
     }, [gameId, address, enabled, onGameUpdate]);
 
-    // Function to notify other players when we make a move
-    // When you make a move, notify other players
+    // Notify other players when current player makes a move
     const notifyMove = async (action: GameSyncMessage['action']) => {
         if (!gameId || !address) return;
-
-        console.log(
-            `📢 Notifying other players: ${action} at ${new Date().toISOString()}`
-        );
         await notifyGameUpdate(gameId, action);
-        console.log(`✅ Notification sent for: ${action}`);
     };
     return {
         notifyMove,

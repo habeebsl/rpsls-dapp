@@ -102,13 +102,6 @@ export function GameCreationModal({ isOpen, onClose }: GameCreationModalProps) {
     setError(null);
 
     try {
-      console.log('Starting game with:', {
-        stake,
-        opponentAddress,
-        selectedMove,
-      });
-
-      // Step 1: Create the game contract
       const result = await createNewGame(
         opponentAddress,
         stake,
@@ -120,9 +113,6 @@ export function GameCreationModal({ isOpen, onClose }: GameCreationModalProps) {
         throw new Error('Failed to create game contract');
       }
 
-      console.log('Contract created:', result.contractAddress);
-
-      // Step 2: Store game data in Redis
       const requestData: StoreGameResultRequest = {
         j1Address: userAddress,
         j2Address: opponentAddress,
@@ -136,28 +126,17 @@ export function GameCreationModal({ isOpen, onClose }: GameCreationModalProps) {
       };
 
       await gameApi.storeGameResult(requestData);
-      console.log('Game data stored in Redis');
-
-      // Step 3: Send notification to opponent
       await notificationHelpers.gameRequest(
         userAddress,
         opponentAddress,
         result.contractAddress
       );
-      console.log('Notification sent to opponent');
-
-      // Step 4: Send notification to creator (self) for easy game access
       await notificationHelpers.gameStarted(
         userAddress,
         opponentAddress,
         result.contractAddress
       );
-      console.log('Game started notification sent to creator');
 
-      // Step 5: Success! Navigate to the game immediately
-      console.log('Game created successfully:', result.contractAddress);
-
-      // Close modal first for instant feedback
       handleClose();
 
       // Then navigate (replace instead of push for faster transition)
@@ -193,9 +172,7 @@ export function GameCreationModal({ isOpen, onClose }: GameCreationModalProps) {
         onClick={!isCreating ? handleClose : undefined}
       ></div>
 
-      {/* Modal Container */}
       <div className="relative bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
-        {/* Close Button - only show when not creating */}
         {!isCreating && (
           <button
             onClick={handleClose}
@@ -254,8 +231,7 @@ export function GameCreationModal({ isOpen, onClose }: GameCreationModalProps) {
               placeholder="0x..."
               className="w-full p-4 pr-12 rounded-lg border-2 border-gray-300 bg-white text-gray-900 focus:border-purple-500 focus:outline-none transition-colors"
               disabled={isCreating}
-            />{' '}
-            {/* Validation Icon */}
+            />
             {opponentAddress && (
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                 {isSelfPlay ? (
@@ -284,7 +260,6 @@ export function GameCreationModal({ isOpen, onClose }: GameCreationModalProps) {
             )}
           </div>
 
-          {/* Validation Messages */}
           {opponentAddress && (
             <div className="mt-2 text-sm">
               {isSelfPlay ? (

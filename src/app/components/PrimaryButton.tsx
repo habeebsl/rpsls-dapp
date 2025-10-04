@@ -62,31 +62,26 @@ export function PrimaryButton({
   const widthStyle = width !== undefined ? `${width}px` : undefined;
 
   const handleMouseDown = () => {
-    // Prevent press effects when disabled/loading or no onClick handler
     if (isLoading || !onClick) return;
     setIsPressed(true);
   };
 
   const handleMouseUp = async () => {
-    // Prevent interaction when disabled/loading or no onClick handler
     if (isLoading || !onClick) return;
     setIsPressed(false);
 
-    // Call the callback after releasing the click
     try {
       setIsLoading(true);
       await onClick();
     } catch (error) {
-      console.error('Button callback error:', error);
+      console.error('Button action failed:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleMouseLeave = () => {
-    // Prevent interaction when disabled/loading or no onClick handler
     if (isLoading || !onClick) return;
-    // Reset pressed state if mouse leaves while pressed
     setIsPressed(false);
   };
 
@@ -95,11 +90,10 @@ export function PrimaryButton({
       className={`relative ${className}`}
       style={{
         width: widthStyle,
-        height: `${height + shadowTop}px`, // Reserve space for shadow
-        overflow: widthStyle ? 'hidden' : 'visible', // Only hide overflow when width is set
+        height: `${height + shadowTop}px`,
+        overflow: widthStyle ? 'hidden' : 'visible',
       }}
     >
-      {/* Shadow/background container - hidden when pressed */}
       {!isPressed && (
         <div
           className={`absolute left-0 right-0 ${borderRadius} ${isLoading ? 'bg-gray-600' : shadowColor}`}
@@ -115,7 +109,6 @@ export function PrimaryButton({
         style={{
           width: widthStyle,
           height: `${height}px`,
-          // When pressed AND not loading AND onClick exists, move button down to where shadow was
           top: isPressed && !isLoading && onClick ? `${shadowTop}px` : '0px',
         }}
         onMouseDown={!isLoading && onClick ? handleMouseDown : undefined}

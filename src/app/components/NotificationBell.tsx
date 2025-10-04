@@ -78,11 +78,9 @@ export function NotificationBell() {
       if (address && notification && !notification.read) {
         await markAsRead(notificationId, address);
       }
-      // Navigate to the game page (gameId is the contract address)
       router.push(`/game/${gameId}`);
     } catch (error) {
       console.error('Error marking notification as read:', error);
-      // Still navigate even if marking as read fails
       router.push(`/game/${gameId}`);
     }
   };
@@ -108,33 +106,24 @@ export function NotificationBell() {
     if (!address) return;
 
     try {
-      // Only mark unread notifications as read
       const unreadNotifications = notifications.filter(n => !n.read);
-
-      // Mark each unread notification as read
       for (const notification of unreadNotifications) {
         await markAsRead(notification.id, address);
       }
     } catch (error) {
-      console.error('Error marking all notifications as read:', error);
+      console.error('Failed to mark all notifications as read:', error);
     }
   };
 
   const handleRemoveNotification = async (notificationId: string) => {
     try {
-      // Find the notification to check if it's unread
       const notification = notifications.find(n => n.id === notificationId);
-
-      // If it's unread, mark it as read first to keep count accurate
       if (address && notification && !notification.read) {
         await markAsRead(notificationId, address);
       }
-
-      // Then remove it from local state
       removeNotification(notificationId);
     } catch (error) {
-      console.error('Error removing notification:', error);
-      // Still remove locally even if backend fails
+      console.error('Failed to remove notification:', error);
       removeNotification(notificationId);
     }
   };

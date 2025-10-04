@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { markNotificationAsRead } from '@/lib/redis';
 
-// PATCH /api/notifications/[id]/read
 export async function PATCH(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }

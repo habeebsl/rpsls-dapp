@@ -24,7 +24,6 @@ export function ConnectionStatusBadge({
     }
   };
 
-  // Loading state
   if (isLoading) {
     return (
       <button
@@ -37,7 +36,6 @@ export function ConnectionStatusBadge({
     );
   }
 
-  // Connected state
   if (isConnected && address) {
     return (
       <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-50 text-green-700 text-sm font-medium">
@@ -47,7 +45,6 @@ export function ConnectionStatusBadge({
     );
   }
 
-  // Not connected state - clickable button
   return (
     <button
       onClick={handleClick}

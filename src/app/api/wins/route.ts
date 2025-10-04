@@ -14,8 +14,6 @@ export async function GET(request: NextRequest) {
         }
 
         const gameHistory = await getGameHistory(address);
-
-        // Count wins from game history
         const winCount = gameHistory.filter(game => game.type === 'win').length;
 
         return NextResponse.json({

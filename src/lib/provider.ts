@@ -9,13 +9,12 @@ export function getConsistentProvider(): ethers.JsonRpcProvider {
 
     if (!infuraKey) {
         console.warn(
-            '⚠️ NEXT_PUBLIC_INFURA_API_KEY not set, falling back to public RPC'
+            'NEXT_PUBLIC_INFURA_API_KEY not set, falling back to public RPC'
         );
-        // Fallback to public Sepolia RPC (less reliable but better than inconsistent sources)
+        // Fallback to public Sepolia RPC
         return new ethers.JsonRpcProvider('https://rpc.sepolia.org');
     }
 
-    // Use Infura as the consistent source of truth
     return new ethers.JsonRpcProvider(
         `https://sepolia.infura.io/v3/${infuraKey}`
     );
@@ -28,11 +27,8 @@ export function getConsistentProvider(): ethers.JsonRpcProvider {
 export async function getHybridProvider(
     userSigner: ethers.Signer
 ): Promise<{ provider: ethers.Provider; signer: ethers.Signer }> {
-    // Get the consistent provider for all read operations
     const consistentProvider = getConsistentProvider();
 
-    // For write operations, we still need the user's signer connected to MetaMask
-    // But we'll read from the consistent provider
     return {
         provider: consistentProvider,
         signer: userSigner,

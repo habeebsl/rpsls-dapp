@@ -6,11 +6,10 @@ import {
 } from '@/lib/metamask';
 import { ethers } from 'ethers';
 
-// Event callback type for blockchain state changes
 type StateChangeCallback = () => void;
 
 interface WalletState {
-    isConnected: boolean | null; // null = loading, true = connected, false = not connected
+    isConnected: boolean | null;
     address: string | null;
     signer: ethers.Signer | null;
     isLoading: boolean;
@@ -66,7 +65,6 @@ export const useWalletStore = create<WalletState>((set, get) => ({
         try {
             const ethereum = await checkExistingConnection();
             if (ethereum) {
-                // If we have an existing connection, update the state
                 const signer = await getSignerIfConnected();
                 if (signer) {
                     const address = await signer.getAddress();
@@ -80,7 +78,6 @@ export const useWalletStore = create<WalletState>((set, get) => ({
                 }
             }
 
-            // No existing connection found
             set({
                 isConnected: false,
                 address: null,
@@ -134,20 +131,16 @@ export const useWalletStore = create<WalletState>((set, get) => ({
                         notifyCallbacks();
                     };
 
-                    // Add listeners
                     provider.on('accountsChanged', handleAccountsChanged);
                     provider.on('chainChanged', handleChainChanged);
                     provider.on('connect', handleConnect);
                     provider.on('disconnect', handleDisconnect);
-
-                    console.log('✅ MetaMask provider event listeners setup');
                 }
             };
 
             setupProviderListeners();
         }
 
-        // Return unsubscribe function
         return () => {
             const { _stateChangeCallbacks } = get();
             _stateChangeCallbacks.delete(callback);

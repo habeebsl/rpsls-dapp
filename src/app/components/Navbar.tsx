@@ -19,11 +19,8 @@ export function NavBar() {
   const pathname = usePathname();
   const [isGameModalOpen, setIsGameModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  // Check if we're on a game page
   const isGamePage = pathname?.startsWith('/game/');
 
-  // Check wallet connection on component mount only
   useEffect(() => {
     checkConnection();
   }, []);
@@ -31,7 +28,6 @@ export function NavBar() {
   return (
     <div>
       <nav className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center p-4 bg-white shadow-sm">
-        {/* Logo */}
         <div className="flex flex-row items-center justify-center gap-2">
           <FontAwesomeIcon
             icon={faGamepad}
@@ -41,7 +37,6 @@ export function NavBar() {
           <div className="font-medium text-lg text-blue-600">RPSLS</div>
         </div>
 
-        {/* Desktop Navigation - Hidden on mobile */}
         <div className="hidden md:flex gap-4">
           <Link
             href="/"
@@ -63,7 +58,6 @@ export function NavBar() {
           >
             Games
           </Link>
-          {/* Conditionally show Share or Play button */}
           {isGamePage ? (
             <ShareButton />
           ) : (
@@ -74,17 +68,13 @@ export function NavBar() {
           )}
         </div>
 
-        {/* Right Side - Responsive */}
         <div className="flex items-center gap-3">
-          {/* Mobile: Connection Status Badge - Hidden on desktop */}
           <div className="md:hidden">
             <ConnectionStatusBadge onConnect={connect} />
           </div>
 
-          {/* Notification Bell - Always visible */}
           <NotificationBell />
 
-          {/* Desktop: Full connection display */}
           <div className="hidden md:block">
             <LoggedInContainer
               isConnected={isConnected}
@@ -93,7 +83,6 @@ export function NavBar() {
             />
           </div>
 
-          {/* Mobile: Hamburger Menu Button */}
           <button
             onClick={() => setIsMobileMenuOpen(true)}
             className="md:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -108,14 +97,12 @@ export function NavBar() {
         </div>
       </nav>
 
-      {/* Mobile Menu */}
       <MobileMenu
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
         onPlayGame={() => setIsGameModalOpen(true)}
       />
 
-      {/* Game Creation Modal */}
       <GameCreationModal
         isOpen={isGameModalOpen}
         onClose={() => setIsGameModalOpen(false)}

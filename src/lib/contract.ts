@@ -28,7 +28,6 @@ export async function createNewGame(
             ? ethers.parseEther(stakeAmount)
             : stakeAmount;
 
-    // Create commitment hash: keccak256(abi.encodePacked(move, salt))
     const commitmentHash = ethers.solidityPackedKeccak256(
         ['uint8', 'uint256'],
         [moveNumber, salt]
@@ -47,20 +46,11 @@ export async function createNewGame(
     await contract.waitForDeployment();
     const contractAddress = await contract.getAddress();
 
-    // VERIFICATION: Test that the contract is actually working
-    console.log('🔍 Verifying deployed contract at:', contractAddress);
+    // Verify the deployed contract is working correctly
     try {
-        // Test basic contract calls to ensure it's properly deployed
         const j1Address = await (contract as any).j1();
         const j2Address = await (contract as any).j2();
         const contractStake = await (contract as any).stake();
-
-        console.log('✅ Contract verification successful:', {
-            j1: j1Address,
-            j2: j2Address,
-            stake: contractStake.toString(),
-            contractAddress,
-        });
 
         // Verify the values match what we expect
         if (j1Address === ethers.ZeroAddress) {
@@ -79,7 +69,7 @@ export async function createNewGame(
             );
         }
     } catch (error) {
-        console.error('❌ Contract verification failed:', error);
+        console.error('Contract verification failed:', error);
         throw new Error(
             `Contract deployed but verification failed: ${error instanceof Error ? error.message : 'Unknown error'}`
         );
@@ -139,8 +129,6 @@ export async function getGameState(
     contractAddress: string,
     signer: ethers.Signer | null
 ) {
-    // CRITICAL FIX: Use consistent provider for all users
-    // Instead of using signer.provider (which varies per user's MetaMask RPC),
     // use a single consistent RPC endpoint so all users see the same blockchain state
     const consistentProvider = getConsistentProvider();
 
@@ -148,7 +136,7 @@ export async function getGameState(
     const contract = new ethers.Contract(
         contractAddress,
         contractArtifact.abi,
-        consistentProvider // Use consistent provider, not signer
+        consistentProvider
     );
 
     // Get user address for debugging (if signer is available)
@@ -162,10 +150,6 @@ export async function getGameState(
     // Use 'latest' to get most recent data
     const callOptions = { blockTag: 'latest' as const };
 
-    console.log(
-        `🔍 Fetching from CONSISTENT provider, block: ${latestBlock}, user: ${userLabel}`
-    );
-
     const [j1, j2, stake, c2, c1Hash, lastAction] = await Promise.all([
         contract.j1(callOptions),
         contract.j2(callOptions),
@@ -174,22 +158,6 @@ export async function getGameState(
         contract.c1Hash(callOptions),
         contract.lastAction(callOptions),
     ]);
-
-    // Enhanced debugging - log raw blockchain data
-    console.log(
-        `🔍 RAW BLOCKCHAIN DATA for ${userLabel} (block ${latestBlock}):`,
-        {
-            contract: contractAddress.slice(0, 10) + '...',
-            j1: j1.slice(0, 8) + '...',
-            j2: j2.slice(0, 8) + '...',
-            stake: stake.toString(),
-            c2: c2.toString(),
-            c1Hash: c1Hash.slice(0, 10) + '...',
-            lastAction: lastAction.toString(),
-            timestamp: new Date().toISOString(),
-            rpcSource: 'Consistent Infura RPC',
-        }
-    );
 
     return {
         j1: j1,

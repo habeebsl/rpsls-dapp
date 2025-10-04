@@ -15,7 +15,6 @@ import { useRevealMove } from '@/hooks/useRevealMove';
 import { useTimeout } from '@/hooks/useTimeout';
 import { useMoveSelection } from '@/hooks/useMoveSelection';
 import { NUMBER_TO_MOVE, Move } from '@/types';
-import { ethers } from 'ethers';
 
 export default function GamePage() {
   const params = useParams();
@@ -32,7 +31,6 @@ export default function GamePage() {
 
   // Handle real-time game end (opponent reveals move)
   const handleGameEndViaRealtime = async () => {
-    console.log('🎯 Game ended via real-time notification received');
     setRealtimeGameEndDetected(true);
   };
 
@@ -142,21 +140,8 @@ export default function GamePage() {
 
   // Effect to detect game end via real-time and show results modal
   useEffect(() => {
-    console.log('🔄 useEffect triggered:', {
-      realtimeGameEndDetected,
-      gameState: !!gameState,
-      currentUserAddress: !!currentUserAddress,
-      gameStake: gameState?.stake,
-      previousGameHasEnded,
-    });
-
     const handleRealtimeGameEnd = async () => {
       if (!realtimeGameEndDetected || !gameState || !currentUserAddress) {
-        console.log('⏭️ Skipping real-time game end handling:', {
-          realtimeGameEndDetected,
-          hasGameState: !!gameState,
-          hasCurrentUser: !!currentUserAddress,
-        });
         return;
       }
 
@@ -167,17 +152,7 @@ export default function GamePage() {
         realtimeGameEndDetected && !previousGameHasEnded;
 
       if (gameEndedViaBlockchain || gameEndedViaRealtime) {
-        console.log('🎯 Detected game end, calculating results...', {
-          source: gameEndedViaBlockchain ? 'blockchain' : 'realtime',
-          stake: gameState.stake,
-          previousGameHasEnded,
-          isCurrentUserJ1,
-          userMove,
-          realtimeGameEndDetected,
-        });
-
         try {
-          // Import the utility function
           const { calculateGameResult } = await import('@/utils/gameResults');
 
           // We need J1's move to calculate the result
@@ -187,33 +162,24 @@ export default function GamePage() {
 
           if (isCurrentUserJ1) {
             j1Move = userMove;
-            console.log('📋 J1 using own move:', j1Move);
           } else {
             // J2 needs to get J1's move from their own game result (J1 stores it as opponentChoice for J2)
             try {
               const { gameApi } = await import('@/services/api');
-              console.log('🔍 J2 fetching own game result to get J1 move...', {
-                contractAddress,
-                currentUserAddress,
-              });
 
               // Retry mechanism: J1's API update might take a moment to complete
               let gameResultResponse;
               let attempts = 0;
               const maxAttempts = 5;
-              const delayMs = 1000; // 1 second between attempts
+              const delayMs = 1000;
 
               while (attempts < maxAttempts) {
                 attempts++;
-                console.log(
-                  `🔄 Attempt ${attempts}/${maxAttempts} to fetch J2 game result...`
-                );
 
                 gameResultResponse = await gameApi.getGameResult(
                   contractAddress,
                   currentUserAddress
                 );
-                console.log('📦 Game result response:', gameResultResponse);
 
                 // Check if we have the completed data with opponentChoice
                 if (
@@ -222,37 +188,22 @@ export default function GamePage() {
                   gameResultResponse.gameResult.status === 'completed' &&
                   gameResultResponse.gameResult.opponentChoice
                 ) {
-                  console.log(
-                    '✅ Found completed game result with opponent move!'
-                  );
                   break;
                 }
 
-                console.log(
-                  `⏳ Game result not ready yet (status: ${gameResultResponse.gameResult?.status}), waiting ${delayMs}ms...`
-                );
                 if (attempts < maxAttempts) {
                   await new Promise(resolve => setTimeout(resolve, delayMs));
                 }
               }
 
               if (gameResultResponse.success && gameResultResponse.gameResult) {
-                console.log(
-                  '📊 Game result data (full object):',
-                  JSON.stringify(gameResultResponse.gameResult, null, 2)
-                );
-                // J1's move should be stored as J2's opponentChoice
                 j1Move = gameResultResponse.gameResult.opponentChoice;
-                console.log('🎯 Found J1 move from API:', j1Move);
               } else {
-                console.warn(
-                  '❌ API response unsuccessful or missing gameResult after all attempts:',
-                  JSON.stringify(gameResultResponse, null, 2)
-                );
+                console.error('Failed to fetch game result after all attempts');
               }
             } catch (error) {
               console.error(
-                '💥 Error fetching J1 move for result calculation:',
+                'Error fetching J1 move for result calculation:',
                 error
               );
             }
@@ -267,28 +218,14 @@ export default function GamePage() {
             );
             if (j1GameResult.success && j1GameResult.gameResult) {
               originalStake = j1GameResult.gameResult.stake;
-              console.log('✅ Found original stake from Redis:', originalStake);
             }
           } catch (stakeError) {
             console.warn('Could not fetch stake from Redis:', stakeError);
           }
 
           if (j1Move) {
-            console.log('✅ Have J1 move, calculating result...', {
-              j1Move,
-              j1MoveNumber: require('@/types').MOVE_TO_NUMBER[j1Move],
-              j2Move: require('@/types').NUMBER_TO_MOVE[gameState.c2],
-              j2MoveNumber: gameState.c2,
-              isCurrentUserJ1,
-              isCurrentUserJ2,
-              currentUserAddress,
-              gameState: gameState,
-            });
-
             // Check if J2 never played (timeout scenario)
             if (gameState.c2 === 0 || !gameState.c2) {
-              console.log('🕐 Detected timeout scenario - J2 never played');
-
               const timeoutResult = {
                 absoluteWinner: 'j1-wins' as const,
                 j1Move: j1Move,
@@ -298,13 +235,9 @@ export default function GamePage() {
                 timeoutWinner: 'j1' as const,
               };
 
-              console.log(
-                '🎉 Setting timeout result (J2 never played):',
-                timeoutResult
-              );
               setGameResult(timeoutResult);
               setShowResultModal(true);
-              return; // Exit early
+              return;
             }
 
             // Add originalStake to gameState for calculation
@@ -317,39 +250,15 @@ export default function GamePage() {
               gameStateWithStake,
               j1Move,
               true
-            ); // true = skip blockchain check in real-time mode
-            console.log('🎲 calculateGameResult returned:', result);
-            console.log(
-              '🎯 About to call setGameResult with absoluteWinner:',
-              result?.absoluteWinner
-            );
-            console.log(
-              '🎯 Current user is J1?',
-              isCurrentUserJ1,
-              'Current user is J2?',
-              isCurrentUserJ2
             );
             if (result) {
-              console.log('🎉 Setting game result and showing modal:', {
-                ...result,
-                callerIsJ1: isCurrentUserJ1,
-                callerIsJ2: isCurrentUserJ2,
-              });
               setGameResult(result);
               setShowResultModal(true);
-            } else {
-              console.warn('⚠️ calculateGameResult returned null/undefined');
             }
           } else {
             // J1 move not available - this is likely a timeout scenario
-            console.warn(
-              '⚠️ J1 move not available - checking for timeout scenario'
-            );
-
             // Check if this is a timeout (game ended but J1 never revealed)
             if (gameHasEnded && gameState.stake === '0') {
-              console.log('🕐 Detected timeout scenario - J1 failed to reveal');
-
               // Fetch original stake
               let timeoutStake = '0';
               try {
@@ -378,7 +287,6 @@ export default function GamePage() {
                 timeoutWinner: 'j2' as const,
               };
 
-              console.log('🎉 Setting timeout result:', timeoutResult);
               setGameResult(timeoutResult);
               setShowResultModal(true);
             }
@@ -412,14 +320,7 @@ export default function GamePage() {
         return;
       }
 
-      console.log('🔍 Game has already ended, fetching result...', {
-        isSpectator,
-        gameHasEnded,
-        hasGameState: !!gameState,
-      });
-
       try {
-        // Import calculateGameResult
         const { calculateGameResult } = await import('@/utils/gameResults');
 
         // Try to get J1's move from API (stored when J1 created the game)
@@ -437,8 +338,7 @@ export default function GamePage() {
           );
           if (j1MoveResponse && j1MoveResponse.move) {
             j1Move = j1MoveResponse.move;
-            setFetchedJ1Move(j1Move); // Store in state for use by MoveContainer
-            console.log('✅ Found J1 move from API:', j1Move);
+            setFetchedJ1Move(j1Move);
           }
 
           // Fetch J1's game result to get the original stake
@@ -478,8 +378,7 @@ export default function GamePage() {
           ) {
             if (j1GameResult.gameResult.status === 'timeout') {
               isTimeoutGame = true;
-              timeoutWinnerFromRedis = 'j2'; // J1 lost, so J2 won
-              console.log('🕐 J1 lost by timeout, J2 won');
+              timeoutWinnerFromRedis = 'j2';
             } else if (
               j1GameResult.gameResult.type === 'win' &&
               j1GameResult.gameResult.status === 'completed'
@@ -495,16 +394,15 @@ export default function GamePage() {
                   j2GameResult.gameResult?.status === 'timeout'
                 ) {
                   isTimeoutGame = true;
-                  timeoutWinnerFromRedis = 'j1'; // J2 lost by timeout
-                  console.log('🕐 J2 lost by timeout, J1 won');
+                  timeoutWinnerFromRedis = 'j1';
                 }
               } catch (j2Error) {
-                console.warn('Could not check J2 timeout status:', j2Error);
+                console.error('Could not check J2 timeout status:', j2Error);
               }
             }
           }
         } catch (apiError) {
-          console.warn('Could not fetch game data from API:', apiError);
+          console.error('Could not fetch game data from API:', apiError);
         }
 
         // If we have both moves, calculate the result
@@ -533,10 +431,6 @@ export default function GamePage() {
               isTimeout: true,
               timeoutWinner: timeoutWinnerFromRedis,
             };
-            console.log(
-              '🎉 Setting timeout result for display (move hidden for player who timed out):',
-              timeoutResult
-            );
             setGameResult(timeoutResult);
             setShowResultModal(true);
           } else {
@@ -548,19 +442,12 @@ export default function GamePage() {
             );
 
             if (result) {
-              console.log('🎉 Setting game result for display:', result);
               setGameResult(result);
               setShowResultModal(true);
             }
           }
         } else {
           // Missing moves - check if this is a timeout scenario
-          console.warn('⚠️ Cannot calculate result - checking for timeout:', {
-            hasJ1Move: !!j1Move,
-            hasJ2Move: gameState.c2 > 0,
-            gameEnded: gameState.stake === '0',
-          });
-
           // Determine timeout scenario
           if (gameState.stake === '0') {
             let timeoutWinner: 'j1' | 'j2';
@@ -569,20 +456,16 @@ export default function GamePage() {
             let j2MoveDisplay = 'Unknown';
 
             if (!gameState.c2 || gameState.c2 === 0) {
-              // J2 never played - J1 wins by timeout
-              console.log('🕐 Timeout: J2 never played, J1 wins');
               timeoutWinner = 'j1';
               absoluteWinner = 'j1-wins';
-              j1MoveDisplay = j1Move || 'Unknown'; // J1 can show their move since they didn't timeout
-              j2MoveDisplay = 'Unknown'; // J2 timed out, hide their move
+              j1MoveDisplay = j1Move || 'Unknown';
+              j2MoveDisplay = 'Unknown';
             } else {
-              // J2 played but J1 never revealed - J2 wins by timeout
-              console.log('🕐 Timeout: J1 never revealed, J2 wins');
               timeoutWinner = 'j2';
               absoluteWinner = 'j2-wins';
-              j1MoveDisplay = 'Unknown'; // J1 timed out, hide their move
+              j1MoveDisplay = 'Unknown';
               j2MoveDisplay =
-                require('@/types').NUMBER_TO_MOVE[gameState.c2] || 'Unknown'; // J2 can show their move
+                require('@/types').NUMBER_TO_MOVE[gameState.c2] || 'Unknown';
             }
 
             const timeoutResult = {
@@ -594,10 +477,6 @@ export default function GamePage() {
               timeoutWinner,
             };
 
-            console.log(
-              '🎉 Setting timeout result for display (unrevealed move hidden):',
-              timeoutResult
-            );
             setGameResult(timeoutResult);
             setShowResultModal(true);
           }
@@ -621,7 +500,6 @@ export default function GamePage() {
   const getJ1Result = (): 'win' | 'loss' | 'tie' | null => {
     if (!gameHasEnded || !gameResult) return null;
 
-    // Import the helper function
     const { getUserPerspectiveResult } = require('@/utils/gameResults');
 
     // J1's result from J1's perspective
@@ -636,7 +514,6 @@ export default function GamePage() {
   const getJ2Result = (): 'win' | 'loss' | 'tie' | null => {
     if (!gameHasEnded || !gameResult) return null;
 
-    // Import the helper function
     const { getUserPerspectiveResult } = require('@/utils/gameResults');
 
     // J2's result from J2's perspective
@@ -699,7 +576,6 @@ export default function GamePage() {
   return (
     <div className="min-h-screen bg-gray-100 relative overflow-hidden">
       <div className="container mx-auto px-4 max-w-4xl pt-30 pb-28 md:pb-4">
-        {/* Game Action Buttons - Only for players */}
         {!isSpectator && (
           <GameActionButtons
             isCurrentUserJ1={isCurrentUserJ1}
@@ -711,7 +587,6 @@ export default function GamePage() {
           />
         )}
 
-        {/* Player Status Cards */}
         <GameStatus
           gameState={gameState}
           j1HasPlayed={j1HasPlayed}
@@ -723,7 +598,7 @@ export default function GamePage() {
           isSpectator={isSpectator}
         />
 
-        {/* Spectator View Banner */}
+        {/* Spectator mode: show read-only view with game info */}
         {isSpectator && (
           <div className="mb-6 md:mb-8">
             <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 md:p-6">
@@ -781,7 +656,7 @@ export default function GamePage() {
           </div>
         )}
 
-        {/* Move Selection - Only show if current user is a player */}
+        {/* Players can select moves - spectators cannot */}
         {!isSpectator && (
           <div className="mb-8">
             {(() => {
@@ -805,7 +680,6 @@ export default function GamePage() {
                 currentUserAddress: currentUserAddress,
                 gameHasEnded: gameHasEnded,
               };
-              console.log('🎮 MoveContainer props:', moveContainerProps);
               return (
                 <MoveContainer
                   hasSelectedMove={moveContainerProps.hasSelectedMove}
@@ -822,7 +696,6 @@ export default function GamePage() {
         )}
       </div>
 
-      {/* Game Result Modal */}
       {gameResult && (
         <GameResultModal
           isOpen={showResultModal}

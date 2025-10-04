@@ -6,7 +6,6 @@ import {
     clearAllNotifications,
 } from '@/lib/redis';
 
-// GET /api/notifications?address={userAddress}
 export async function GET(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url);
@@ -35,12 +34,9 @@ export async function GET(request: NextRequest) {
     }
 }
 
-// POST /api/notifications
 export async function POST(request: NextRequest) {
     try {
         const notification = await request.json();
-
-        // Validate required fields
         if (
             !notification.id ||
             !notification.type ||
@@ -54,12 +50,10 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Add timestamp if not provided
         if (!notification.timestamp) {
             notification.timestamp = new Date().toISOString();
         }
 
-        // Set read to false if not provided
         if (notification.read === undefined) {
             notification.read = false;
         }
@@ -79,7 +73,6 @@ export async function POST(request: NextRequest) {
     }
 }
 
-// DELETE /api/notifications?address={userAddress}
 export async function DELETE(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url);
@@ -104,5 +97,5 @@ export async function DELETE(request: NextRequest) {
             { error: 'Failed to clear notifications' },
             { status: 500 }
         );
-    }  
+    }
 }

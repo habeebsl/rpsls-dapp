@@ -15,11 +15,11 @@ interface PlayerCardProps {
   address: string;
   hasPlayed: boolean;
   isJ1: boolean;
-  lastAction: string; // Timestamp from contract
-  currentUserAddress?: string; // To determine if this card represents "You" or "Opponent"
-  gameResult?: 'win' | 'loss' | 'tie' | null; // Game result for this player
-  gameHasEnded?: boolean; // Whether the game has ended
-  isSpectator?: boolean; // Whether the viewer is a spectator (not a player)
+  lastAction: string;
+  currentUserAddress?: string;
+  gameResult?: 'win' | 'loss' | 'tie' | null;
+  gameHasEnded?: boolean;
+  isSpectator?: boolean;
 }
 
 export function PlayerCard({
@@ -37,19 +37,17 @@ export function PlayerCard({
 
   const isCurrentUser =
     currentUserAddress?.toLowerCase() === address.toLowerCase();
-  const TIMEOUT_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
-  const TIMEOUT_SAFETY_BUFFER = 10 * 1000; // 10 seconds safety buffer for blockchain timing
-  const TOTAL_TIMEOUT_DURATION = TIMEOUT_DURATION + TIMEOUT_SAFETY_BUFFER; // 5:10 total
+  const TIMEOUT_DURATION = 5 * 60 * 1000;
+  const TIMEOUT_SAFETY_BUFFER = 10 * 1000;
+  const TOTAL_TIMEOUT_DURATION = TIMEOUT_DURATION + TIMEOUT_SAFETY_BUFFER;
 
-  // Calculate time remaining and timeout status
   useEffect(() => {
     if (!lastAction || lastAction === '0') return;
 
     const updateTimer = () => {
-      const lastActionTime = parseInt(lastAction) * 1000; // Convert to milliseconds
+      const lastActionTime = parseInt(lastAction) * 1000;
       const now = Date.now();
       const elapsed = now - lastActionTime;
-      // Use total duration (5:10) so timer reaches zero when button becomes clickable
       const remaining = TOTAL_TIMEOUT_DURATION - elapsed;
 
       if (remaining <= 0) {
@@ -67,19 +65,15 @@ export function PlayerCard({
     return () => clearInterval(interval);
   }, [lastAction]);
 
-  // Format time remaining for display
   const formatTime = (ms: number): string => {
     const minutes = Math.floor(ms / 60000);
     const seconds = Math.floor((ms % 60000) / 1000);
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  // Determine if we should show the timer (only show on the player who needs to act)
-  // Show timer for any player who hasn't completed their current required action
   const shouldShowTimer =
     !gameHasEnded && !hasPlayed && lastAction && lastAction !== '0';
 
-  // Get result indicator configuration
   const getResultIndicator = () => {
     if (!gameHasEnded || !gameResult) return null;
 
@@ -111,7 +105,6 @@ export function PlayerCard({
 
   return (
     <div className="relative">
-      {/* Timer or Result indicator in top-right corner */}
       {shouldShowTimer && (
         <div className="absolute -top-1 -right-1 md:-top-2 md:-right-2 z-10">
           {isTimeout ? (
@@ -129,7 +122,6 @@ export function PlayerCard({
         </div>
       )}
 
-      {/* Game result indicator */}
       {resultIndicator && (
         <div className="absolute -top-1 -right-1 md:-top-2 md:-right-2 z-10">
           <div
@@ -143,7 +135,6 @@ export function PlayerCard({
         </div>
       )}
 
-      {/* Main card container */}
       <div
         className={`relative w-36 h-36 md:w-48 md:h-48 rounded-lg shadow-lg overflow-hidden transition-all duration-300 ${
           hasPlayed
@@ -151,7 +142,6 @@ export function PlayerCard({
             : 'bg-gray-400 border-2 border-gray-500'
         }`}
       >
-        {/* Ethereum icon background */}
         <div className="absolute inset-0 flex items-center justify-center opacity-10">
           <svg
             width="120"
@@ -169,9 +159,7 @@ export function PlayerCard({
           </svg>
         </div>
 
-        {/* Card content */}
         <div className="relative z-10 h-full flex flex-col justify-between p-3 md:p-4">
-          {/* Player identifier */}
           <div className="text-center">
             <h3 className="text-white text-base md:text-lg font-bold mb-1">
               {isSpectator
@@ -187,7 +175,6 @@ export function PlayerCard({
             </p>
           </div>
 
-          {/* Status indicator */}
           <div className="text-center">
             <div className="text-white mb-1 md:mb-2">
               {hasPlayed ? (

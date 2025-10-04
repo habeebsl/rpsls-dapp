@@ -56,7 +56,6 @@ export function ShareButton({
   };
 
   if (variant === 'secondary') {
-    // Simple button style for mobile menu
     return (
       <>
         <button
@@ -67,7 +66,6 @@ export function ShareButton({
           <span>Share Game</span>
         </button>
 
-        {/* Toast Notification */}
         {showToast && (
           <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg animate-fade-in">
             ✓ Link copied to clipboard!
@@ -77,7 +75,6 @@ export function ShareButton({
     );
   }
 
-  // Primary button style for navbar
   return (
     <>
       <PrimaryButton
@@ -88,7 +85,6 @@ export function ShareButton({
         className={className}
       />
 
-      {/* Toast Notification */}
       {showToast && (
         <div className="fixed bottom-4 right-4 z-50 bg-green-600 text-white px-4 py-3 rounded-lg shadow-lg animate-fade-in">
           ✓ Link copied to clipboard!

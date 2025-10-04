@@ -2,7 +2,7 @@ import { NUMBER_TO_MOVE, MOVE_TO_NUMBER } from '@/types';
 import { ethers } from 'ethers';
 
 export interface GameResultData {
-    absoluteWinner: 'j1-wins' | 'j2-wins' | 'tie'; // Absolute game outcome
+    absoluteWinner: 'j1-wins' | 'j2-wins' | 'tie';
     j1Move: string;
     j2Move: string;
     stakeAmount: string;
@@ -34,36 +34,16 @@ export function determineWinner(
     const m1 = Number(move1);
     const m2 = Number(move2);
 
-    console.log('🎮 determineWinner called:', {
-        j1Move: m1,
-        j1MoveName: NUMBER_TO_MOVE[m1],
-        j2Move: m2,
-        j2MoveName: NUMBER_TO_MOVE[m2],
-        originalMove1Type: typeof move1,
-        originalMove2Type: typeof move2,
-    });
-
     if (m1 === m2) {
-        console.log('🤝 Moves are equal - TIE');
         return 'tie';
     }
 
     const move1Beats =
         WINNING_COMBINATIONS[m1 as keyof typeof WINNING_COMBINATIONS];
 
-    console.log('🎯 Checking if J1 wins:', {
-        j1Move: m1,
-        j1Beats: move1Beats,
-        j2Move: m2,
-        j2MoveType: typeof m2,
-        doesJ1BeatJ2: move1Beats.includes(m2),
-    });
-
     if (move1Beats.includes(m2)) {
-        console.log('✅ J1 WINS');
         return 'j1-wins';
     } else {
-        console.log('✅ J2 WINS');
         return 'j2-wins';
     }
 }
@@ -80,17 +60,8 @@ export function calculateGameResult(
     j1Move: string | null,
     isRealtimeContext: boolean = false
 ): GameResultData | null {
-    console.log('🔍 calculateGameResult called with:', {
-        j1Move,
-        j2MoveNumber: gameState.c2,
-        stake: gameState.stake,
-        isRealtimeContext,
-        fullGameState: gameState,
-    });
-
     // Ensure game has ended (stake is 0) - skip check in real-time context
     if (!isRealtimeContext && gameState.stake !== '0') {
-        console.warn('Game has not ended yet, cannot calculate result');
         return null;
     }
 
@@ -100,32 +71,13 @@ export function calculateGameResult(
         : null;
     const j2MoveNumber = gameState.c2;
 
-    console.log('🔢 Move numbers:', {
-        j1Move,
-        j1MoveNumber,
-        j2MoveNumber,
-        j2Move: NUMBER_TO_MOVE[j2MoveNumber],
-    });
-
     if (!j1MoveNumber || !j2MoveNumber) {
-        console.warn('Missing move data for result calculation');
         return null;
     }
 
     // Determine absolute winner (no perspective)
     const absoluteWinner = determineWinner(j1MoveNumber, j2MoveNumber);
 
-    console.log('🎲 calculateGameResult computed:', {
-        j1Move,
-        j1MoveNumber,
-        j2MoveNumber,
-        j2Move: NUMBER_TO_MOVE[j2MoveNumber],
-        absoluteWinner,
-        winningLogic: `J1(${j1Move}/${j1MoveNumber}) vs J2(${NUMBER_TO_MOVE[j2MoveNumber]}/${j2MoveNumber}) = ${absoluteWinner}`,
-    });
-
-    // Format stake amount - check if originalStake is already formatted (from Redis)
-    // or if it needs formatting (from blockchain wei value)
     let formattedStake: string;
     if (gameState.originalStake) {
         // If originalStake exists, it's from Redis and already formatted as ETH string
@@ -158,17 +110,6 @@ export function getUserPerspectiveResult(
     isTimeout: boolean = false,
     timeoutWinner?: 'j1' | 'j2'
 ): 'win' | 'loss' | 'tie' {
-    // Add stack trace to identify the caller
-    const stackTrace = new Error().stack;
-    const caller = stackTrace ? stackTrace.split('\n')[2] : 'Unknown caller';
-
-    console.log(`🔍 getUserPerspectiveResult called from ${caller}:`, {
-        absoluteWinner,
-        isJ1,
-        isTimeout,
-        timeoutWinner,
-    });
-
     let result: 'win' | 'loss' | 'tie';
 
     // Handle timeout cases
@@ -196,8 +137,5 @@ export function getUserPerspectiveResult(
         result = 'loss';
     }
 
-    console.log(
-        `🎲 getUserPerspectiveResult returning: ${result} for caller: ${caller}`
-    );
     return result;
 }

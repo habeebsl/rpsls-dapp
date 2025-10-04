@@ -19,7 +19,6 @@ interface UseMoveSelectionReturn {
 
 export function useMoveSelection({
   contractAddress,
-  currentUserAddress,
   signer,
   gameState,
   isCurrentUserJ2,
@@ -40,22 +39,17 @@ export function useMoveSelection({
         throw new Error('Only Player 2 can play moves at this stage');
       }
 
-      console.log(`J2 playing move: ${move} with stake: ${gameState.stake}`);
-      
       // Submit move to smart contract with stake payment
       // gameState.stake is already in Wei from the blockchain, so pass it as BigInt
       const stakeInWei = ethers.toBigInt(gameState.stake);
       const transaction = await play(contractAddress, move, stakeInWei, signer);
-      console.log('Transaction submitted:', transaction.hash);
       
       // Wait for transaction to be mined
       await transaction.wait();
-      console.log('Transaction confirmed');
       
       // Notify other players of the move
       if (notifyMove) {
         await notifyMove('move_made');
-        console.log('📢 Notified other players of move');
       }
       
       // Refresh game state to reflect the new move

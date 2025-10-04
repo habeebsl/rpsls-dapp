@@ -7,7 +7,6 @@ export function LoadingScreen() {
   return (
     <div className="fixed inset-0 bg-gray-100 flex items-center justify-center z-50">
       <div className="text-center">
-        {/* Pulsing App Icon */}
         <div className="mb-6">
           <FontAwesomeIcon
             icon={faGamepad}
@@ -19,11 +18,9 @@ export function LoadingScreen() {
           />
         </div>
 
-        {/* Loading Text */}
         <h2 className="text-2xl font-semibold text-gray-700 mb-2">Loading</h2>
         <p className="text-gray-500">Connecting to MetaMask...</p>
 
-        {/* Loading Dots Animation */}
         <div className="flex justify-center mt-4 space-x-1">
           <div
             className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"
@@ -40,7 +37,6 @@ export function LoadingScreen() {
         </div>
       </div>
 
-      {/* Custom CSS for scale pulse animation */}
       <style jsx>{`
         @keyframes pulse-scale {
           0%,

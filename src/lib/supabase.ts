@@ -10,23 +10,14 @@ const supabaseAnonKey =
     process.env.VITE_SUPABASE_ANON_KEY ||
     'your-anon-key';
 
-// Debug: Check if environment variables are loaded
-console.log('🔧 Supabase Config:', {
-    url: supabaseUrl?.slice(0, 30) + '...',
-    keyLoaded: !!supabaseAnonKey && supabaseAnonKey !== 'your-anon-key',
-    nextPublicUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-    viteUrl: !!process.env.VITE_SUPABASE_URL,
-});
-
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     realtime: {
         params: {
-            eventsPerSecond: 10, // Reasonable rate limit
+            eventsPerSecond: 10,
         },
     },
 });
 
-// Game sync types
 export interface GameSyncMessage {
     gameId: string;
     playerId: string;
@@ -46,7 +37,7 @@ export const notifyGameUpdate = async (
         event: 'game_update',
         payload: {
             gameId,
-            playerId: 'current_player', // We'll get this from wallet
+            playerId: 'current_player',
             action,
             timestamp: Date.now(),
         } as GameSyncMessage,
@@ -62,12 +53,9 @@ export const subscribeToGameUpdates = (
 
     channel
         .on('broadcast', { event: 'game_update' }, ({ payload }) => {
-            console.log('🔔 Received game update:', payload);
             onUpdate(payload as GameSyncMessage);
         })
-        .subscribe(status => {
-            console.log(`📡 Game sync status for ${gameId}:`, status);
-        });
+        .subscribe();
 
     return channel;
 };

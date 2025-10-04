@@ -2,7 +2,6 @@ import { create } from 'zustand';
 import { notificationApi } from '@/services/api';
 import { PersistentNotification } from '@/types';
 
-// Simplified notification interface - all notifications are persistent
 export interface Notification {
     id: string;
     message: string;
@@ -21,7 +20,7 @@ interface NotificationState {
     isOpen: boolean;
     isLoading: boolean;
     lastFetch: Date | null;
-    
+
     addNotification: (
         message: string,
         type: Notification['type'],
@@ -48,7 +47,6 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
     isLoading: false,
     lastFetch: null,
 
-    // Add persistent notification - much simpler!
     addNotification: async (
         message: string,
         type: Notification['type'],
@@ -58,7 +56,6 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
         gameId?: string
     ) => {
         try {
-            // Create notification via API service
             await notificationApi.addNotification({
                 message,
                 type,
@@ -68,10 +65,8 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
                 gameId,
             });
 
-            // Reload notifications to get the updated list
             await get().loadNotifications(to);
-            
-            // Auto-open panel for new notifications
+
             set({ isOpen: true });
         } catch (error) {
             console.error('Error adding notification:', error);
@@ -112,9 +107,7 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
         }
     },
 
-    // Mark notification as read via API service
     markAsRead: async (id: string, userAddress: string) => {
-        // Update local state immediately for better UX
         set(state => {
             const notifications = state.notifications.map(n =>
                 n.id === id ? { ...n, read: true } : n
@@ -129,7 +122,6 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
             await notificationApi.markAsRead(id, userAddress);
         } catch (error) {
             console.error('Error marking notification as read:', error);
-            // Optionally revert local state on error
             set(state => {
                 const notifications = state.notifications.map(n =>
                     n.id === id ? { ...n, read: false } : n
@@ -164,10 +156,8 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
 
     clearAll: async (userAddress: string) => {
         try {
-            // Clear on backend first
             await notificationApi.clearAllNotifications(userAddress);
-            
-            // Then update local state
+
             set({
                 notifications: [],
                 unreadCount: 0,

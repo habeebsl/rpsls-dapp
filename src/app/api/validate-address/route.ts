@@ -4,7 +4,6 @@ export async function POST(request: NextRequest) {
     try {
         const { address } = await request.json();
 
-        // Validate input
         if (!address || typeof address !== 'string') {
             return NextResponse.json(
                 { error: 'Address is required' },
@@ -12,7 +11,6 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // First check basic format
         if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
             return NextResponse.json({
                 isValid: false,
@@ -21,7 +19,6 @@ export async function POST(request: NextRequest) {
             });
         }
 
-        // Check if address exists on Sepolia using server-side API key
         const apiKey = process.env.ETHERSCAN_API_KEY;
         if (!apiKey) {
             console.error(
@@ -37,10 +34,6 @@ export async function POST(request: NextRequest) {
             `https://api-sepolia.etherscan.io/api?module=account&action=balance&address=${address}&tag=latest&apikey=${apiKey}`
         );
         const data = await response.json();
-
-        console.log('Etherscan API response for', address, ':', data);
-
-        // If we get a valid response with status '1', the address exists on Sepolia
         const exists = data.status === '1' && data.result !== undefined;
 
         return NextResponse.json({

@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes, faStopwatch } from '@fortawesome/free-solid-svg-icons';
 import { PrimaryButton } from './PrimaryButton';
-import { getMoveEmoji, getMoveIcon } from '@/lib/moves';
+import { getMoveIcon } from '@/lib/moves';
 
 interface GameResultModalProps {
   isOpen: boolean;
@@ -35,7 +35,6 @@ export function GameResultModal({
 
   if (!isOpen) return null;
 
-  // Calculate result from current user's perspective
   const { getUserPerspectiveResult } = require('@/utils/gameResults');
   const result = getUserPerspectiveResult(
     absoluteWinner,
@@ -44,13 +43,9 @@ export function GameResultModal({
     timeoutWinner
   );
 
-  // Get player's move and opponent's move
-  // For spectators, always show j1Move as "Player 1" and j2Move as "Player 2"
-  // For players, show based on their perspective
   const playerMove = isSpectator ? j1Move : isCurrentUserJ1 ? j1Move : j2Move;
   const opponentMove = isSpectator ? j2Move : isCurrentUserJ1 ? j2Move : j1Move;
 
-  // Calculate stake winnings
   const calculateWinnings = (): {
     amount: string;
     color: string;
@@ -59,36 +54,30 @@ export function GameResultModal({
   } => {
     const stake = parseFloat(stakeAmount);
 
-    // Format amount to remove unnecessary trailing zeros
     const formatAmount = (amount: number): string => {
       return amount === 0 ? '0' : amount.toString();
     };
 
-    // For spectators, show neutral stake information
     if (isSpectator) {
       if (absoluteWinner === 'tie') {
         return {
-          amount: formatAmount(stake * 2), // Total stake (both players)
+          amount: formatAmount(stake * 2),
           color: 'text-gray-600',
           sign: '',
           label: 'Total Stake',
         };
       }
-      // Show winner's earnings
       return {
-        amount: formatAmount(stake * 2), // Winner gets both stakes
+        amount: formatAmount(stake * 2),
         color: 'text-blue-600',
         sign: '',
         label: `${absoluteWinner === 'j1-wins' ? 'Player 1' : 'Player 2'} Won`,
       };
     }
 
-    // For players, show personalized winnings/losses
     if (isTimeout) {
       if (result === 'win') {
-        // Winner by timeout
         if (isCurrentUserJ1 && timeoutWinner === 'j1') {
-          // J1 wins by J2 timeout - J1 gets nothing (J2 never staked)
           return {
             amount: '0',
             color: 'text-gray-600',
@@ -96,7 +85,6 @@ export function GameResultModal({
             label: 'Your Winnings',
           };
         } else if (!isCurrentUserJ1 && timeoutWinner === 'j2') {
-          // J2 wins by J1 timeout - J2 gets J1's stake
           return {
             amount: formatAmount(stake),
             color: 'text-green-600',
@@ -105,9 +93,7 @@ export function GameResultModal({
           };
         }
       }
-      // Loser by timeout - check if they actually staked
       if (result === 'loss') {
-        // If J2 lost by timeout (J1 called timeout), J2 never staked, so they lose nothing
         if (!isCurrentUserJ1 && timeoutWinner === 'j1') {
           return {
             amount: '0',
@@ -116,7 +102,6 @@ export function GameResultModal({
             label: 'Your Loss',
           };
         }
-        // If J1 lost by timeout (J2 called timeout), J1 loses their stake
         return {
           amount: formatAmount(stake),
           color: 'text-red-600',
@@ -125,9 +110,7 @@ export function GameResultModal({
         };
       }
     } else {
-      // Regular game results
       if (result === 'win') {
-        // Winner gets opponent's stake (net gain)
         return {
           amount: formatAmount(stake),
           color: 'text-green-600',
@@ -135,7 +118,6 @@ export function GameResultModal({
           label: 'Your Winnings',
         };
       } else if (result === 'loss') {
-        // Loser loses their stake
         return {
           amount: formatAmount(stake),
           color: 'text-red-600',
@@ -145,7 +127,6 @@ export function GameResultModal({
       }
     }
 
-    // Tie - no money changes hands
     return {
       amount: '0',
       color: 'text-gray-600',
@@ -156,9 +137,7 @@ export function GameResultModal({
 
   const winnings = calculateWinnings();
 
-  // Get title text
   const getTitleText = (): string => {
-    // Spectator view - show absolute winner
     if (isSpectator) {
       if (absoluteWinner === 'tie') return 'They Tied';
       if (absoluteWinner === 'j1-wins') {
@@ -167,7 +146,6 @@ export function GameResultModal({
       return isTimeout ? 'Player 2 Won by Timeout!' : 'Player 2 Won!';
     }
 
-    // Player view - show from their perspective
     if (isTimeout) {
       if (result === 'win') return 'You Won by Timeout!';
       if (result === 'loss') return 'You Lost by Timeout';
@@ -178,9 +156,7 @@ export function GameResultModal({
     return 'You Tied';
   };
 
-  // Get subtitle text
   const getSubtitle = (): string => {
-    // Spectator view - neutral subtitles
     if (isSpectator) {
       if (isTimeout) {
         if (absoluteWinner === 'j1-wins')
@@ -192,7 +168,6 @@ export function GameResultModal({
       return 'Game completed';
     }
 
-    // Player view - personalized subtitles
     if (isTimeout) {
       if (result === 'win') return 'Your opponent failed to act in time';
       return 'You failed to act in time';
@@ -207,7 +182,6 @@ export function GameResultModal({
     router.push('/');
   };
 
-  // Get title color
   const getTitleColor = () => {
     if (result === 'win') return 'text-green-600';
     if (result === 'loss') return 'text-red-600';
@@ -216,12 +190,9 @@ export function GameResultModal({
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
-      {/* Background Overlay */}
       <div className="absolute inset-0 bg-black opacity-30" onClick={onClose} />
 
-      {/* Modal Content - Much smaller and cleaner */}
       <div className="relative bg-white rounded-2xl shadow-2xl max-w-sm w-full mx-4 p-6">
-        {/* Close Button */}
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-full hover:bg-gray-100"
@@ -229,7 +200,6 @@ export function GameResultModal({
           <FontAwesomeIcon icon={faTimes} size="lg" />
         </button>
 
-        {/* Title */}
         <div className="text-center mb-6">
           <h2 className={`text-2xl font-bold mb-2 ${getTitleColor()}`}>
             {getTitleText()}
@@ -237,7 +207,6 @@ export function GameResultModal({
           <p className="text-gray-600 text-sm">{getSubtitle()}</p>
         </div>
 
-        {/* Move Battle Display - Always show, use ?? for unknown moves */}
         <div className="mb-6">
           <div className="flex items-center justify-center gap-4">
             {/* First Player's Move */}
