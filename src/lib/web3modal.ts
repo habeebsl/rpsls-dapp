@@ -22,6 +22,11 @@ if (projectId === 'PLACEHOLDER_PROJECT_ID_REPLACE_ME') {
         '🌐 Current origin:',
         typeof window !== 'undefined' ? window.location.origin : 'SSR'
     );
+    console.log(
+        '⚠️ If mobile WalletConnect fails, verify this Project ID at https://cloud.walletconnect.com'
+    );
+    console.log('   - Check that your domain is in "Allowed Domains"');
+    console.log('   - Ensure the project is active and not rate-limited');
 }
 
 // Set up queryClient
@@ -61,15 +66,14 @@ export const modal = createAppKit({
     defaultNetwork: sepolia,
     metadata,
     features: {
-        analytics: true,
+        analytics: false, // Disable analytics - causing errors
         email: false,
         socials: [],
-        onramp: false, // Disable buying crypto
+        onramp: false,
     },
     // ONLY show MetaMask - no other wallets
     includeWalletIds: [
         'c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96', // MetaMask only
     ],
-    // Don't include wallet images to reduce load time
     enableWalletGuide: false,
 });
