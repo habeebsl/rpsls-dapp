@@ -90,19 +90,19 @@ src/
 
 ### Custom Hooks
 
-**useGameState** - Manages blockchain game state with real-time updates
-**useRevealMove** - Handles move revelation for Player 1
-**useMoveSelection** - Processes Player 2's move submission
-**useTimeout** - Implements timeout logic for stuck games
-**useGameSync** - Real-time game updates via Supabase
+- **useGameState** - Manages blockchain game state with real-time updates
+- **useRevealMove** - Handles move revelation for Player 1
+- **useMoveSelection** - Processes Player 2's move submission
+- **useTimeout** - Implements timeout logic for stuck games
+- **useGameSync** - Real-time game updates via Supabase
 
 ### Core Libraries
 
-**contract.ts** - Smart contract interaction layer
-**provider.ts** - Consistent RPC provider to avoid sync issues
-**metamask.ts** - Wallet connection with mobile support
-**supabase.ts** - Real-time game synchronization
-**redis.ts** - Persistent storage for game history
+- **contract.ts** - Smart contract interaction layer
+- **provider.ts** - Consistent RPC provider to avoid sync issues
+- **metamask.ts** - Wallet connection with mobile support
+- **supabase.ts** - Real-time game synchronization
+- **redis.ts** - Persistent storage for game history
 
 ### Game Flow
 
