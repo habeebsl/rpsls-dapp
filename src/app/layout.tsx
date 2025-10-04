@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import Script from 'next/script';
 import './globals.css';
 import '@/lib/fontawesome'; // Initialize Font Awesome
 import { NavBar } from './components/Navbar';
@@ -25,12 +26,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-        {/* Mobile debugging console - Eruda */}
-        <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-        <script dangerouslySetInnerHTML={{ __html: 'eruda.init();' }} />
-      </head>
       <body className={`${inter.className} antialiased`}>
+        {/* Mobile debugging console - Eruda */}
+        <Script
+          src="https://cdn.jsdelivr.net/npm/eruda"
+          strategy="beforeInteractive"
+          onLoad={() => {
+            if (typeof window !== 'undefined' && (window as any).eruda) {
+              (window as any).eruda.init();
+            }
+          }}
+        />
         <Web3ModalProvider>
           <NavBar />
           <NotificationProvider />
