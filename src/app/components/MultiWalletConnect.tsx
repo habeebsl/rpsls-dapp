@@ -4,7 +4,7 @@ import { useAppKit } from '@reown/appkit/react';
 import { useAccount, useDisconnect } from 'wagmi';
 import { useEffect } from 'react';
 import { useWalletStore } from '@/stores/walletStore';
-import { BrowserProvider } from 'ethers';
+import { BrowserProvider, Eip1193Provider } from 'ethers';
 
 export function MultiWalletConnect() {
   const { address, isConnected, connector } = useAccount();
@@ -17,7 +17,9 @@ export function MultiWalletConnect() {
       if (isConnected && address && connector) {
         try {
           const provider = await connector.getProvider();
-          const ethersProvider = new BrowserProvider(provider as any);
+          const ethersProvider = new BrowserProvider(
+            provider as Eip1193Provider
+          );
           const signer = await ethersProvider.getSigner();
 
           useWalletStore.getState().setWalletState(address, signer);

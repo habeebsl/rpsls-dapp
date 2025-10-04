@@ -7,13 +7,11 @@ import LoadingSpinner from './LoadingSpinner';
 interface LoggedInContainerProps {
   isConnected: boolean | null; // null = loading, true = connected, false = not connected
   userAddress?: string;
-  onConnect: () => void;
 }
 
 export default function LoggedInContainer({
   isConnected,
   userAddress,
-  onConnect,
 }: LoggedInContainerProps) {
   // Loading state
   if (isConnected === null) {

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { faWallet, faTrophy } from '@fortawesome/free-solid-svg-icons';
-import { useNotificationStore } from '@/stores/notificationStore';
 import { useWalletStore } from '@/stores/walletStore';
 import { useAppKit } from '@reown/appkit/react';
 import { PrimaryButton } from '@/app/components/PrimaryButton';

@@ -5,7 +5,7 @@
 import { useAccount } from 'wagmi';
 import { useEffect, useRef } from 'react';
 import { useWalletStore } from '@/stores/walletStore';
-import { BrowserProvider } from 'ethers';
+import { BrowserProvider, Eip1193Provider } from 'ethers';
 
 /**
  * This component syncs wagmi wallet state with the global walletStore.
@@ -24,7 +24,9 @@ export function WalletSync() {
       if (isConnected && address && connector) {
         try {
           const provider = await connector.getProvider();
-          const ethersProvider = new BrowserProvider(provider as any);
+          const ethersProvider = new BrowserProvider(
+            provider as Eip1193Provider
+          );
           const signer = await ethersProvider.getSigner();
 
           useWalletStore.getState().setWalletState(address, signer);

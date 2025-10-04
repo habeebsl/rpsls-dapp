@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import LoggedInContainer from './LoggedInContainer';
@@ -83,11 +83,10 @@ export function NavBar() {
           <NotificationBell />
 
           {/* Desktop: Full connection display */}
-          <div className="hidden md:block">
+          <div className="hidden md:flex items-center">
             <LoggedInContainer
               isConnected={isConnected}
-              userAddress={address || undefined}
-              onConnect={connect}
+              userAddress={address ?? undefined}
             />
           </div>
 
