@@ -136,7 +136,7 @@ The codebase prioritizes:
 - Efficient state management
 - Proper error handling
 
-Comments in the code explain complex logic like blockchain timing issues, BigInt conversions, and timeout scenarios. Redundant comments have been removed.
+Comments in the code explain complex logic like blockchain timing issues, BigInt conversions, and timeout scenarios.
 
 ## Contract Details
 
