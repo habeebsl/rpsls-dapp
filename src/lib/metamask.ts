@@ -3,37 +3,30 @@ import { ethers } from 'ethers';
 
 let MMSDK: MetaMaskSDK | null = null;
 
-// Initialize MetaMask SDK for mobile support
 function initializeSDK() {
     if (typeof window === 'undefined') return null;
 
-    // Don't initialize if already done or if MetaMask extension is present
     if (MMSDK) return MMSDK;
 
-    // Check if MetaMask extension is already available (desktop)
     if ((window as any).ethereum?.isMetaMask) {
         console.log('MetaMask extension detected, skipping SDK initialization');
         return null;
     }
 
-    // Initialize SDK for mobile browsers with persistence
     console.log('Initializing MetaMask SDK for mobile support...');
     MMSDK = new MetaMaskSDK({
         dappMetadata: {
             name: 'RPSLS dApp',
             url: typeof window !== 'undefined' ? window.location.origin : '',
         },
-        // Enable storage for persistent connections
         storage: {
             enabled: true,
         },
-        // Logging for debugging (remove in production)
+        
         logging: {
             developerMode: false,
         },
-        // Don't automatically open deep link on every check
         checkInstallationImmediately: false,
-        // Prefer in-app browser when possible
         preferDesktop: false,
     });
 
@@ -41,10 +34,8 @@ function initializeSDK() {
 }
 
 export async function connectWallet() {
-    // Initialize SDK first (for mobile)
     initializeSDK();
 
-    // Wait for provider to be available
     const ethereum = await waitForProvider();
     if (!ethereum) {
         throw new Error(
@@ -96,9 +87,7 @@ async function waitForProvider(maxAttempts = 10, delay = 200): Promise<any> {
     });
 }
 
-export async function checkExistingConnection() {
-    // Initialize SDK ONLY if not already initialized
-    // This prevents unnecessary re-initialization on every check
+export async function checkExistingConnection() 
     if (!MMSDK && typeof window !== 'undefined' && !(window as any).ethereum) {
         initializeSDK();
     }
