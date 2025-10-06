@@ -119,6 +119,10 @@ src/
 
 The app uses a consistent Infura RPC endpoint for all read operations to prevent users from seeing different blockchain states. Write operations still use the user's MetaMask provider.
 
+## Game Sync
+
+We exploit Supabase’s Realtime service to enable real-time multiplayer game synchronization,  meaning that when one player makes a move, other connected player instantly receive updates without refreshing the page.
+
 ### Timeout Safety
 
 Timeout functions include a 10-second safety buffer beyond the 5-minute blockchain timeout to prevent transaction reverts from premature calls.
