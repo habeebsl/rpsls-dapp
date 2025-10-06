@@ -119,7 +119,7 @@ src/
 
 The app uses a consistent Infura RPC endpoint for all read operations to prevent users from seeing different blockchain states. Write operations still use the user's MetaMask provider.
 
-## Game Sync
+### Game Sync
 
 We exploit Supabase’s Realtime service to enable real-time multiplayer game synchronization,  meaning that when one player makes a move, other connected player instantly receive updates without refreshing the page.
 
