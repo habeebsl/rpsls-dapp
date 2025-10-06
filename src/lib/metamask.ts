@@ -87,7 +87,7 @@ async function waitForProvider(maxAttempts = 10, delay = 200): Promise<any> {
     });
 }
 
-export async function checkExistingConnection() 
+export async function checkExistingConnection() {
     if (!MMSDK && typeof window !== 'undefined' && !(window as any).ethereum) {
         initializeSDK();
     }
