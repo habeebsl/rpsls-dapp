@@ -1,6 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Environment variables for Next.js (client-side needs NEXT_PUBLIC_ prefix)
 const supabaseUrl =
     process.env.NEXT_PUBLIC_SUPABASE_URL ||
     process.env.VITE_SUPABASE_URL ||
